@@ -1,0 +1,592 @@
+<!-- ── Loading ── -->
+@if (loading) {
+  <div class="-m-8 min-h-screen bg-[#FFFBF0] flex items-center justify-center">
+    <div class="flex flex-col items-center gap-3 text-anchor/40">
+      <span class="material-symbols-outlined text-5xl animate-pulse">menu_book</span>
+      <p class="font-semibold">Loading lesson…</p>
+    </div>
+  </div>
+}
+
+@if (!loading && lesson) {
+
+  <!-- ══════════════════════════════════════════════
+       PDF LESSON — 3-panel immersive layout
+  ══════════════════════════════════════════════ -->
+  @if (lesson.type === 'PDF') {
+    <div class="-m-8 h-screen flex flex-col bg-[#FFFBF0] overflow-hidden">
+
+      <!-- Top bar -->
+      <div class="flex items-center gap-4 px-6 py-3 border-b border-anchor/10 bg-white/80 backdrop-blur-md flex-shrink-0 z-10">
+        <button (click)="location.back()"
+                class="inline-flex items-center gap-1.5 text-sm font-semibold text-anchor/60
+                       px-3 py-1.5 rounded-full hover:bg-anchor/10 transition-colors">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+          Back
+        </button>
+
+        <div class="h-5 w-px bg-anchor/20"></div>
+
+        <!-- Lesson title -->
+        <div class="flex-1 min-w-0">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-anchor/40">PDF Lesson</p>
+          <h1 class="font-display text-base text-anchor truncate leading-tight">{{ lesson.title }}</h1>
+        </div>
+
+        <!-- Zoom controls -->
+        <div class="flex items-center gap-2 bg-anchor/8 rounded-full px-3 py-1.5">
+          <button (click)="zoomOut()"
+                  class="w-7 h-7 rounded-full hover:bg-anchor/15 flex items-center justify-center transition-colors">
+            <span class="material-symbols-outlined text-[16px] text-anchor">remove</span>
+          </button>
+          <span class="text-xs font-bold text-anchor w-10 text-center">{{ zoomPct }}</span>
+          <button (click)="zoomIn()"
+                  class="w-7 h-7 rounded-full hover:bg-anchor/15 flex items-center justify-center transition-colors">
+            <span class="material-symbols-outlined text-[16px] text-anchor">add</span>
+          </button>
+        </div>
+
+        <!-- TTS -->
+        <button (click)="speakText()"
+                class="inline-flex items-center gap-1.5 bg-secondary/15 hover:bg-secondary/25
+                       text-secondary px-4 py-2 rounded-full text-sm font-semibold transition-colors">
+          <span class="material-symbols-outlined text-[18px]">volume_up</span>
+          Listen
+        </button>
+      </div>
+
+      <!-- 3-column body -->
+      <div class="flex flex-1 overflow-hidden">
+
+        <!-- ── Left: page thumbnails ── -->
+        <div class="w-[72px] flex-shrink-0 bg-anchor/5 border-r border-anchor/10 overflow-y-auto py-4
+                    flex flex-col gap-2 items-center">
+          @for (p of pageArray; track p) {
+            <button (click)="currentPage = p"
+                    [ngClass]="p === currentPage
+                      ? 'bg-secondary text-white border-secondary shadow-sm'
+                      : 'bg-white text-anchor/60 border-anchor/20 hover:border-secondary/50'"
+                    class="w-11 h-14 rounded-xl border-2 text-xs font-bold flex items-center
+                           justify-center transition-all flex-shrink-0">
+              {{ p }}
+            </button>
+          }
+          @if (pageArray.length === 0) {
+            <div class="w-11 h-14 rounded-xl border-2 border-anchor/20 bg-white animate-pulse"></div>
+            <div class="w-11 h-14 rounded-xl border-2 border-anchor/20 bg-white animate-pulse"></div>
+            <div class="w-11 h-14 rounded-xl border-2 border-anchor/20 bg-white animate-pulse"></div>
+          }
+        </div>
+
+        <!-- ── Center: PDF viewer ── -->
+        <div class="flex-1 overflow-y-auto flex flex-col items-center py-8 px-6 gap-5 bg-[#f0f4f8]">
+
+          @if (lesson.pdfUrl) {
+            <!-- PDF card with shadow -->
+            <div class="rounded-2xl overflow-hidden bg-white"
+                 style="box-shadow: 0 20px 40px -12px rgba(44,62,80,0.18)">
+              <pdf-viewer
+                [src]="lesson.pdfUrl"
+                [page]="currentPage"
+                [zoom]="zoom"
+                [render-text]="true"
+                [original-size]="false"
+                [fit-to-page]="true"
+                (after-load-complete)="afterLoadComplete($event)"
+                style="display:block; width:680px; min-height:480px;">
+              </pdf-viewer>
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center w-full h-80 rounded-2xl bg-white
+                        border-2 border-dashed border-anchor/20 text-anchor/40 gap-3">
+              <span class="material-symbols-outlined text-6xl">picture_as_pdf</span>
+              <p class="font-semibold">No PDF available</p>
+            </div>
+          }
+
+          <!-- Page navigation pill -->
+          <div class="flex items-center gap-1 bg-white rounded-full px-2 py-2 shadow-sm border border-anchor/10">
+            <button (click)="prevPage()" [disabled]="currentPage <= 1"
+                    class="flex items-center gap-1 text-sm font-semibold px-4 py-1.5 rounded-full
+                           transition-colors disabled:opacity-30 disabled:cursor-not-allowed
+                           hover:bg-anchor/8 text-anchor">
+              <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+              Prev
+            </button>
+            <span class="text-sm font-semibold text-anchor px-5 border-x border-anchor/15 py-1.5">
+              {{ currentPage }} / {{ totalPages || '—' }}
+            </span>
+            <button (click)="nextPage()" [disabled]="currentPage >= totalPages"
+                    class="flex items-center gap-1 text-sm font-semibold px-4 py-1.5 rounded-full
+                           transition-colors disabled:opacity-30 disabled:cursor-not-allowed
+                           hover:bg-anchor/8 text-anchor">
+              Next
+              <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Right: Learning Path + AI Tutor ── -->
+        <div class="w-72 flex-shrink-0 border-l border-anchor/10 bg-white/70 backdrop-blur overflow-y-auto flex flex-col">
+
+          <!-- Header -->
+          <div class="px-5 pt-5 pb-3 border-b border-anchor/10">
+            <h2 class="font-display text-base text-anchor flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px] text-secondary">menu_book</span>
+              Learning Path
+            </h2>
+          </div>
+
+          <!-- Lesson list -->
+          <div class="flex-1 overflow-y-auto py-2 flex flex-col">
+            @for (l of bookLessons; track l.id) {
+              <a [routerLink]="['/lessons', l.id]"
+                 [ngClass]="l.id === lesson.id
+                   ? 'bg-secondary/15 border-l-2 border-secondary'
+                   : 'hover:bg-anchor/5 border-l-2 border-transparent'"
+                 class="flex items-center gap-3 px-4 py-3 transition-all cursor-pointer">
+                <div [ngClass]="l.id === lesson.id
+                       ? 'bg-secondary text-white'
+                       : 'bg-anchor/10 text-anchor/70'"
+                     class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                  {{ l.order || 1 }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p [ngClass]="l.id === lesson.id ? 'text-secondary' : 'text-anchor/70'"
+                     class="text-xs font-semibold truncate">{{ l.title }}</p>
+                  <span class="text-[10px] font-bold uppercase tracking-wide text-anchor/40">
+                    {{ l.type === 'PDF' ? '📄 PDF' : '📝 Text' }}
+                  </span>
+                </div>
+                @if (l.id === lesson.id) {
+                  <span class="material-symbols-outlined text-[14px] text-secondary flex-shrink-0">play_arrow</span>
+                }
+              </a>
+            }
+            @if (bookLessons.length === 0) {
+              <p class="text-xs text-anchor/40 text-center py-6 px-4">No other lessons in this book.</p>
+            }
+          </div>
+
+          <!-- Ask Teacher card -->
+          <div class="m-3 p-4 rounded-2xl flex-shrink-0" style="background-color: #4ECDC4">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-symbols-outlined text-[16px] text-white">school</span>
+              <span class="font-display text-sm text-white">Ask Teacher</span>
+            </div>
+            <p class="text-[11px] text-white/85 mb-3 leading-relaxed">
+              Have a question about this lesson? Chat with your AI teacher using your voice!
+            </p>
+            <button (click)="openTeacher()" [disabled]="startingTeacher"
+               class="inline-flex items-center gap-1.5 bg-white/25 hover:bg-white/35 transition-colors
+                      px-3 py-1.5 rounded-full text-xs font-bold text-white disabled:opacity-60 disabled:cursor-not-allowed">
+              @if (startingTeacher) {
+                <span class="material-symbols-outlined text-[12px] animate-spin">progress_activity</span>
+                Starting...
+              } @else {
+                Ask Teacher
+                <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom action bar -->
+      <div class="flex items-center justify-between px-8 py-3 border-t border-anchor/10 bg-white/80
+                  backdrop-blur-md flex-shrink-0">
+        <div class="flex items-center gap-5">
+          <button class="flex items-center gap-1.5 text-sm font-semibold text-anchor/50
+                         hover:text-anchor transition-colors">
+            <span class="material-symbols-outlined text-[18px]">library_books</span>
+            Resources
+          </button>
+          <button class="flex items-center gap-1.5 text-sm font-semibold text-anchor/50
+                         hover:text-anchor transition-colors">
+            <span class="material-symbols-outlined text-[18px]">forum</span>
+            Discussion
+          </button>
+        </div>
+        <button class="flex items-center gap-2 text-white px-6 py-2.5 rounded-full font-semibold
+                       text-sm hover:opacity-90 transition-opacity shadow-sm"
+                style="background-color: #4ECDC4">
+          <span class="material-symbols-outlined text-[18px]">check_circle</span>
+          Complete Lesson
+        </button>
+      </div>
+
+    </div>
+  }
+
+
+  <!-- ══════════════════════════════════════════════
+       TEXT LESSON — reading layout with sidebar
+  ══════════════════════════════════════════════ -->
+  @if (lesson.type === 'TEXT') {
+    <div class="-m-8 min-h-screen bg-[#FFFBF0] flex flex-col">
+
+      <!-- Sticky top bar -->
+      <div class="sticky top-0 z-10 flex items-center gap-4 px-6 py-3 border-b border-anchor/10
+                  bg-white/80 backdrop-blur-md">
+        <button (click)="location.back()"
+                class="inline-flex items-center gap-1.5 text-sm font-semibold text-anchor/60
+                       px-3 py-1.5 rounded-full hover:bg-anchor/10 transition-colors">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+          Back
+        </button>
+
+        <div class="h-5 w-px bg-anchor/20"></div>
+
+        <div class="flex-1 min-w-0">
+          <p class="text-[10px] font-bold uppercase tracking-widest text-anchor/40">Text Lesson</p>
+          <h1 class="font-display text-base text-anchor truncate leading-tight">{{ lesson.title }}</h1>
+        </div>
+
+        <button (click)="speakText()"
+                class="inline-flex items-center gap-1.5 bg-secondary/15 hover:bg-secondary/25
+                       text-secondary px-4 py-2 rounded-full text-sm font-semibold transition-colors">
+          <span class="material-symbols-outlined text-[18px]">volume_up</span>
+          Listen
+        </button>
+      </div>
+
+      <!-- Body: content + right sidebar -->
+      <div class="flex flex-1 max-w-screen-xl mx-auto w-full px-6 py-8 gap-8">
+
+        <!-- Main content column -->
+        <div class="flex-1 min-w-0 flex flex-col gap-6">
+
+          <!-- Lesson content card -->
+          <div class="bg-white rounded-3xl shadow-sm border border-anchor/8 p-10">
+            <p class="text-anchor/80 leading-[1.9] text-base whitespace-pre-wrap font-sans">{{ lesson.content }}</p>
+          </div>
+
+          <!-- ── Quiz: start prompt ── -->
+          @if (quiz && !quizStarted && !result) {
+            <div class="p-6 rounded-3xl border"
+                 style="background-color: rgba(255,107,53,0.08); border-color: rgba(255,107,53,0.2)">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="material-symbols-outlined text-[22px]" style="color:#FF6B35">quiz</span>
+                <h2 class="font-display text-xl text-anchor">Test Your Knowledge</h2>
+              </div>
+              <p class="text-anchor/60 text-sm mb-4">
+                {{ quiz.questions.length }} question{{ quiz.questions.length !== 1 ? 's' : '' }} · check your understanding of this lesson.
+              </p>
+              <button (click)="quizStarted = true"
+                      class="flex items-center gap-2 text-white px-6 py-2.5 rounded-full font-semibold
+                             text-sm hover:opacity-90 transition-opacity shadow-sm"
+                      style="background-color: #FF6B35">
+                Start Quiz
+                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+              </button>
+            </div>
+          }
+
+          <!-- ── Quiz: questions ── -->
+          @if (quiz && quizStarted && !result) {
+            <div class="bg-white rounded-3xl shadow-sm border border-anchor/8 p-8">
+              <h2 class="font-display text-2xl text-anchor mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[22px]" style="color:#FF6B35">quiz</span>
+                Quiz
+              </h2>
+
+              @for (q of quiz.questions; track q.id; let qi = $index) {
+                <div class="mb-8">
+                  <p class="font-semibold text-anchor mb-3 text-sm">{{ qi + 1 }}. {{ q.questionText }}</p>
+                  <div class="flex flex-col gap-2">
+                    @for (opt of q.options; track $index; let oi = $index) {
+                      <button (click)="answers[q.id] = oi"
+                              [ngClass]="answers[q.id] === oi
+                                ? 'border-[#FF6B35] bg-[#FF6B35]/8 text-anchor'
+                                : 'border-anchor/15 bg-anchor/3 hover:bg-anchor/7 text-anchor/70'"
+                              class="flex items-center gap-3 w-full text-left px-4 py-3
+                                     rounded-xl border-2 transition-all text-sm font-medium">
+                        <div [ngClass]="answers[q.id] === oi ? 'border-[#FF6B35]' : 'border-anchor/30'"
+                             class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0">
+                          @if (answers[q.id] === oi) {
+                            <div class="w-2.5 h-2.5 rounded-full" style="background-color:#FF6B35"></div>
+                          }
+                        </div>
+                        {{ opt }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <button (click)="submitQuiz()" [disabled]="submitting"
+                      class="flex items-center gap-2 text-white px-8 py-3 rounded-full font-semibold
+                             hover:opacity-90 transition-opacity disabled:opacity-50 shadow-sm"
+                      style="background-color: #FF6B35">
+                @if (submitting) {
+                  <span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                }
+                Submit Quiz
+              </button>
+            </div>
+          }
+
+          <!-- ── Quiz: results ── -->
+          @if (result) {
+            <div class="bg-white rounded-3xl shadow-sm border border-anchor/8 p-8">
+              <div class="text-center mb-8">
+                <div class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4"
+                     style="background-color: rgba(78,205,196,0.15)">
+                  <span class="font-display text-4xl" style="color:#4ECDC4">{{ result.score }}%</span>
+                </div>
+                <h2 class="font-display text-2xl text-anchor">Quiz Complete!</h2>
+                <p class="text-anchor/60 mt-1 text-sm">
+                  {{ result.score >= 80 ? '🏆 Excellent work!' : result.score >= 60 ? '👍 Good effort!' : '📚 Keep practicing!' }}
+                </p>
+              </div>
+
+              <div class="flex flex-col gap-3">
+                @for (a of result.answers; track a.questionId) {
+                  <div [ngClass]="a.isCorrect ? 'bg-secondary/10 border-secondary/20' : 'bg-red-50 border-red-200'"
+                       class="p-4 rounded-xl border">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span [ngClass]="a.isCorrect ? 'text-secondary' : 'text-red-500'"
+                            class="material-symbols-outlined text-[18px]">
+                        {{ a.isCorrect ? 'check_circle' : 'cancel' }}
+                      </span>
+                      <span [ngClass]="a.isCorrect ? 'text-secondary' : 'text-red-500'"
+                            class="text-sm font-bold">
+                        {{ a.isCorrect ? 'Correct' : 'Incorrect' }}
+                      </span>
+                    </div>
+                    @if (a.explanation) {
+                      <p class="text-xs text-anchor/60 mt-1 leading-relaxed">{{ a.explanation }}</p>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+        </div>
+
+        <!-- Right sidebar: Learning Path -->
+        <div class="w-72 flex-shrink-0">
+          <div class="bg-white rounded-3xl shadow-sm border border-anchor/8 overflow-hidden sticky top-20">
+
+            <div class="px-5 py-4 border-b border-anchor/10">
+              <h2 class="font-display text-base text-anchor flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px] text-secondary">menu_book</span>
+                Learning Path
+              </h2>
+            </div>
+
+            <div class="max-h-72 overflow-y-auto py-2">
+              @for (l of bookLessons; track l.id) {
+                <a [routerLink]="['/lessons', l.id]"
+                   [ngClass]="l.id === lesson.id
+                     ? 'bg-secondary/12 border-l-2 border-secondary'
+                     : 'hover:bg-anchor/5 border-l-2 border-transparent'"
+                   class="flex items-center gap-3 px-4 py-3 transition-all cursor-pointer">
+                  <div [ngClass]="l.id === lesson.id ? 'bg-secondary text-white' : 'bg-anchor/10 text-anchor/70'"
+                       class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold">
+                    {{ l.order || 1 }}
+                  </div>
+                  <p [ngClass]="l.id === lesson.id ? 'text-secondary' : 'text-anchor/70'"
+                     class="text-xs font-semibold truncate flex-1">
+                    {{ l.title }}
+                  </p>
+                </a>
+              }
+              @if (bookLessons.length === 0) {
+                <p class="text-xs text-anchor/40 text-center py-6 px-4">No other lessons in this book.</p>
+              }
+            </div>
+
+            <!-- Ask Teacher card -->
+            <div class="m-3 p-4 rounded-2xl" style="background-color: #4ECDC4">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-[16px] text-white">school</span>
+                <span class="font-display text-sm text-white">Ask Teacher</span>
+              </div>
+              <p class="text-[11px] text-white/85 mb-3 leading-relaxed">
+                Have a question about this lesson? Chat with your AI teacher using your voice!
+              </p>
+              <button (click)="openTeacher()" [disabled]="startingTeacher"
+                 class="inline-flex items-center gap-1.5 bg-white/25 hover:bg-white/35 transition-colors
+                        px-3 py-1.5 rounded-full text-xs font-bold text-white disabled:opacity-60 disabled:cursor-not-allowed">
+                @if (startingTeacher) {
+                  <span class="material-symbols-outlined text-[12px] animate-spin">progress_activity</span>
+                  Starting...
+                } @else {
+                  Ask Teacher
+                  <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+                }
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky bottom action bar -->
+      <div class="sticky bottom-0 flex items-center justify-between px-8 py-3 border-t border-anchor/10
+                  bg-white/80 backdrop-blur-md">
+        <div class="flex items-center gap-5">
+          <button class="flex items-center gap-1.5 text-sm font-semibold text-anchor/50
+                         hover:text-anchor transition-colors">
+            <span class="material-symbols-outlined text-[18px]">library_books</span>
+            Resources
+          </button>
+          <button class="flex items-center gap-1.5 text-sm font-semibold text-anchor/50
+                         hover:text-anchor transition-colors">
+            <span class="material-symbols-outlined text-[18px]">forum</span>
+            Discussion
+          </button>
+        </div>
+
+        @if (quiz && !quizStarted && !result) {
+          <button (click)="quizStarted = true"
+                  class="flex items-center gap-2 text-white px-6 py-2.5 rounded-full font-semibold
+                         text-sm hover:opacity-90 transition-opacity shadow-sm"
+                  style="background-color: #FF6B35">
+            <span class="material-symbols-outlined text-[18px]">quiz</span>
+            Take the Quiz
+          </button>
+        } @else {
+          <button class="flex items-center gap-2 text-white px-6 py-2.5 rounded-full font-semibold
+                         text-sm hover:opacity-90 transition-opacity shadow-sm"
+                  style="background-color: #4ECDC4">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            Complete Lesson
+          </button>
+        }
+      </div>
+
+    </div>
+  }
+
+}
+
+<!-- ══════════════════════════════════════════════
+     TEACHER CHAT SIDEBAR (shared by both layouts)
+══════════════════════════════════════════════ -->
+
+<!-- Backdrop -->
+@if (teacherOpen) {
+  <div class="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-opacity"
+       (click)="closeTeacher()"></div>
+}
+
+<!-- Sidebar panel -->
+<div class="fixed top-0 right-0 h-full w-full max-w-sm z-50 flex flex-col shadow-2xl transition-transform duration-300"
+     [class.translate-x-0]="teacherOpen"
+     [class.translate-x-full]="!teacherOpen"
+     style="background: linear-gradient(180deg, #1a2a3a 0%, #2C3E50 100%)">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 flex-shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">👨‍🏫</span>
+      <div>
+        <p class="font-display text-white text-base leading-tight">Ask Teacher</p>
+        @if (lesson) {
+          <p class="text-white/50 text-[11px] truncate max-w-[180px]">{{ lesson.title }}</p>
+        }
+      </div>
+    </div>
+    <button (click)="closeTeacher()"
+            class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+      <span class="material-symbols-outlined text-white text-[18px]">close</span>
+    </button>
+  </div>
+
+  <!-- Voice area -->
+  <div class="flex-1 flex flex-col items-center justify-center gap-5 px-6 overflow-hidden">
+
+    <!-- Teacher avatar with glow -->
+    <div class="relative">
+      <div class="absolute inset-0 rounded-full blur-2xl scale-150 animate-pulse"
+           style="background: rgba(78,205,196,0.2)"></div>
+      <div class="w-28 h-28 rounded-full flex items-center justify-center border-4 relative z-10"
+           style="background: rgba(255,255,255,0.08); border-color: rgba(78,205,196,0.3)">
+        <span class="text-5xl" [class.animate-bounce]="teacherStatus === 'idle'">👨‍🏫</span>
+      </div>
+    </div>
+
+    <!-- Status label -->
+    <div class="flex flex-col items-center gap-1 text-center">
+      <div class="flex items-center gap-2">
+        @if (teacherStatus === 'thinking') {
+          <span class="material-symbols-outlined animate-spin text-[18px]"
+                style="color:#4ECDC4; font-variation-settings:'wght' 700">progress_activity</span>
+        } @else if (teacherStatus !== 'idle') {
+          <span class="material-symbols-outlined text-[18px]" style="color:#4ECDC4">graphic_eq</span>
+        }
+        <span class="text-xs font-bold tracking-widest uppercase"
+              [style.color]="teacherStatus !== 'idle' ? '#4ECDC4' : 'rgba(255,255,255,0.7)'">
+          {{ teacherStatusLabel }}
+        </span>
+      </div>
+      @if (teacherTranscript) {
+        <p class="text-[11px] text-white/40 mt-1 max-w-[220px] truncate">You: {{ teacherTranscript }}</p>
+      }
+      @if (teacherReply && (teacherStatus === 'speaking' || teacherStatus === 'idle')) {
+        <p class="text-sm text-white/80 mt-2 max-w-[240px] text-center leading-snug
+                  bg-white/8 backdrop-blur-sm px-4 py-2 rounded-2xl">
+          {{ teacherReply }}
+        </p>
+      }
+    </div>
+
+    <!-- Wave bars -->
+    <div class="flex items-center justify-center gap-1.5 h-12">
+      @for (delay of waveBars; track $index) {
+        <div class="w-1.5 rounded-full transition-all"
+             style="background-color: #4ECDC4"
+             [class.wave-bar]="waveActive"
+             [class.wave-bar-still]="!waveActive"
+             [style.animation-delay]="delay + 's'">
+        </div>
+      }
+    </div>
+
+    <!-- Mic button -->
+    <button (click)="toggleRecording()"
+            [disabled]="teacherStatus === 'thinking'"
+            class="relative group disabled:opacity-50 disabled:cursor-not-allowed">
+      @if (teacherStatus === 'idle') {
+        <div class="absolute inset-0 rounded-full mic-pulse" style="background:#4ECDC4"></div>
+      }
+      @if (teacherStatus === 'recording') {
+        <div class="absolute inset-0 rounded-full animate-ping opacity-30" style="background:#e53e3e"></div>
+      }
+      <div class="relative w-20 h-20 rounded-full flex items-center justify-center shadow-xl z-20
+                  hover:scale-105 active:scale-95 transition-transform"
+           [style.background]="teacherStatus === 'recording'
+             ? 'linear-gradient(135deg,#e53e3e,#c53030)'
+             : 'linear-gradient(135deg,#4ECDC4,#38b2ac)'"
+           [style.box-shadow]="teacherStatus === 'recording'
+             ? '0 6px 30px rgba(229,62,62,0.5)'
+             : '0 6px 30px rgba(78,205,196,0.45)'">
+        <span class="material-symbols-outlined text-4xl text-white"
+              style="font-variation-settings:'FILL' 1">
+          {{ teacherStatus === 'recording' ? 'stop' : 'mic' }}
+        </span>
+      </div>
+    </button>
+
+  </div>
+
+  <!-- Suggestion pills -->
+  <div class="px-4 pb-6 pt-3 flex-shrink-0 border-t border-white/10">
+    <div class="flex flex-col gap-2">
+      @for (s of suggestions; track s.label) {
+        <button (click)="sendSuggestion(s.label)"
+                [disabled]="teacherStatus !== 'idle'"
+                class="w-full text-left bg-white/8 hover:bg-white/15 border border-white/10
+                       hover:border-white/25 text-white/80 px-4 py-2.5 rounded-xl text-sm
+                       font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+          {{ s.emoji }} {{ s.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+</div>

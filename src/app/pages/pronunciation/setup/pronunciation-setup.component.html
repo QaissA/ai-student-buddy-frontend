@@ -1,0 +1,43 @@
+<div class="max-w-3xl mx-auto">
+
+  <div class="card mb-8 flex items-center gap-4"
+       style="background: linear-gradient(135deg, #4ECDC4, #2980b9);">
+    <div class="w-14 h-14 rounded-[1.25rem] bg-white/20 flex items-center justify-center">
+      <span class="material-symbols-outlined text-white text-3xl">record_voice_over</span>
+    </div>
+    <div>
+      <h1 class="font-display text-3xl text-white">Pronunciation Practice</h1>
+      <p class="text-white/70 text-sm">Choose a text and practice speaking 🎙️</p>
+    </div>
+  </div>
+
+  @if (loading) {
+    <div class="flex flex-col gap-3">
+      @for (_ of [1,2,3]; track $index) { <div class="card animate-pulse h-24 bg-anchor/5"></div> }
+    </div>
+  } @else {
+    <div class="flex flex-col gap-3">
+      @for (text of texts; track text.id) {
+        <a [routerLink]="['/pronunciation', text.id]"
+           class="card hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(44,62,80,0.1)] transition-all duration-200 flex items-center gap-4">
+          <div class="w-10 h-10 rounded-full bg-secondary/15 flex items-center justify-center flex-shrink-0">
+            <span class="material-symbols-outlined text-secondary text-xl">mic</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-anchor font-medium line-clamp-2">{{ text.text }}</p>
+            <span class="text-xs text-anchor/40 uppercase tracking-wide font-semibold">{{ text.language }}</span>
+          </div>
+          <span class="material-symbols-outlined text-anchor/30">chevron_right</span>
+        </a>
+      }
+
+      @if (texts.length === 0) {
+        <div class="card text-center py-12 text-anchor/40">
+          <span class="material-symbols-outlined text-5xl block mb-3">mic_off</span>
+          <p class="font-medium">No pronunciation texts available yet.</p>
+        </div>
+      }
+    </div>
+  }
+
+</div>

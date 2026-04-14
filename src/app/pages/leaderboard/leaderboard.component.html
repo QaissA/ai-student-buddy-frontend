@@ -1,0 +1,154 @@
+<div class="-m-8 min-h-screen" style="background: #FFFBF0">
+
+  <!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+  <div class="relative overflow-hidden"
+       style="background: linear-gradient(135deg, #2C3E50 0%, #1a252f 100%)">
+    <div class="absolute top-0 right-0 w-80 h-80 rounded-full -translate-y-1/3 translate-x-1/4 pointer-events-none"
+         style="background: radial-gradient(circle, rgba(255,217,61,0.2), transparent 70%)"></div>
+    <div class="absolute bottom-0 left-1/3 w-64 h-64 rounded-full translate-y-1/2 pointer-events-none"
+         style="background: radial-gradient(circle, rgba(255,107,53,0.15), transparent 70%)"></div>
+
+    <div class="relative z-10 px-8 py-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-4"
+           style="background: rgba(255,217,61,0.18); border: 1px solid rgba(255,217,61,0.35)">
+        <span class="text-achievement text-sm">🏆</span>
+        <span class="text-achievement text-xs font-bold uppercase tracking-widest">Explorer Rankings</span>
+      </div>
+      <h1 class="font-display text-4xl text-white mb-2">Leaderboard</h1>
+      <p class="text-white/50 text-sm">Top students ranked by total score across all activities.</p>
+    </div>
+  </div>
+
+  <div class="px-8 py-8 max-w-4xl">
+
+    <!-- ── Loading ── -->
+    @if (loading) {
+      <div class="flex flex-col gap-4">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="h-16 rounded-[1.25rem] animate-pulse" style="background: white"></div>
+        }
+      </div>
+    } @else {
+
+      <!-- ── Podium (top 3) ── -->
+      @if (top3.length >= 2) {
+        <div class="mb-10">
+          <!-- Reorder: 2nd · 1st · 3rd -->
+          <div class="flex items-end justify-center gap-4">
+            @for (cfg of podiumConfig; track cfg.order) {
+              @if (top3[cfg.order]) {
+                <div class="flex flex-col items-center gap-3 pop-in" [style.animation-delay]="cfg.order * 80 + 'ms'">
+
+                  <!-- Avatar -->
+                  <div class="relative">
+                    <div class="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl float"
+                         [style.background]="cfg.bg" [style.border]="'2px solid ' + cfg.border"
+                         [style.color]="cfg.color">
+                      {{ top3[cfg.order].firstName.charAt(0).toUpperCase() }}
+                    </div>
+                    <!-- Medal badge -->
+                    <span class="absolute -bottom-1 -right-1 text-base leading-none">{{ cfg.medal }}</span>
+                  </div>
+
+                  <!-- Name + score -->
+                  <div class="text-center">
+                    <p class="font-bold text-sm" style="color: #2C3E50">
+                      {{ top3[cfg.order].firstName }}
+                      @if (top3[cfg.order].isMe) { <span style="color: #FF6B35">(You)</span> }
+                    </p>
+                    <p class="text-xs font-bold" [style.color]="cfg.color">
+                      {{ top3[cfg.order].totalScore | number }} pts
+                    </p>
+                  </div>
+
+                  <!-- Podium block -->
+                  <div class="w-24 rounded-t-xl flex items-center justify-center text-white font-display text-2xl"
+                       [class]="cfg.height"
+                       [style.background]="'linear-gradient(180deg, ' + cfg.color + ', ' + cfg.color + 'aa)'">
+                    {{ cfg.order + 1 }}
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── Ranks 4–10 ── -->
+      @if (rest.length > 0) {
+        <div class="mb-8">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-5 rounded-full" style="background: #4ECDC4"></div>
+            <h2 class="font-display text-lg" style="color: #2C3E50">Other Explorers</h2>
+          </div>
+          <div class="flex flex-col gap-3">
+            @for (entry of rest; track entry.rank) {
+              <div class="flex items-center gap-4 px-5 py-4 rounded-[1.25rem] transition-all"
+                   [style.background]="entry.isMe ? 'rgba(255,107,53,0.06)' : 'white'"
+                   [style.border]="entry.isMe ? '1.5px solid rgba(255,107,53,0.3)' : '1.5px solid transparent'"
+                   style="box-shadow: 0 2px 12px rgba(44,62,80,0.07)">
+                <span class="w-8 text-center font-bold text-sm" style="color: rgba(44,62,80,0.4)">#{{ entry.rank }}</span>
+                <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+                     [style.background]="entry.isMe ? 'rgba(255,107,53,0.15)' : 'rgba(78,205,196,0.12)'"
+                     [style.color]="entry.isMe ? '#FF6B35' : '#4ECDC4'">
+                  {{ entry.firstName.charAt(0).toUpperCase() }}
+                </div>
+                <p class="flex-1 font-semibold text-sm" style="color: #2C3E50">
+                  {{ entry.firstName }}
+                  @if (entry.isMe) { <span class="text-xs font-bold" style="color: #FF6B35"> (You)</span> }
+                </p>
+                <p class="font-bold text-sm" style="color: #FFD93D">{{ entry.totalScore | number }} pts</p>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── My Recent Activity ── -->
+      @if (myStats && myStats.recentEvents.length > 0) {
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-1 h-5 rounded-full" style="background: #9B59B6"></div>
+            <h2 class="font-display text-lg" style="color: #2C3E50">My Recent Points</h2>
+          </div>
+          <div class="rounded-[1.5rem] p-5 flex flex-col gap-3"
+               style="background: white; box-shadow: 0 2px 12px rgba(44,62,80,0.07)">
+            @for (event of myStats.recentEvents; track $index) {
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                     style="background: rgba(155,89,182,0.1)">
+                  {{ activityMeta(event.activityType).emoji }}
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold text-sm" style="color: #2C3E50">
+                    {{ activityMeta(event.activityType).label }}
+                  </p>
+                  <p class="text-xs" style="color: rgba(44,62,80,0.45)">
+                    {{ event.createdAt | date:'MMM d, h:mm a' }}
+                  </p>
+                </div>
+                <span class="font-bold text-sm" style="color: #4ECDC4">+{{ event.points }} pts</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ── Empty state ── -->
+      @if (leaderboard.length === 0) {
+        <div class="text-center py-16">
+          <span class="text-6xl block mb-4">🏆</span>
+          <p class="font-display text-xl mb-2" style="color: #2C3E50">No rankings yet</p>
+          <p class="text-sm mb-6" style="color: rgba(44,62,80,0.5)">Start activities to earn points and appear here!</p>
+          <a routerLink="/exercises"
+             class="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm text-white"
+             style="background: linear-gradient(135deg, #FF6B35, #e55a22)">
+            <span class="material-symbols-outlined text-[16px]">sports_esports</span>
+            Play a Game
+          </a>
+        </div>
+      }
+
+    }
+  </div>
+</div>

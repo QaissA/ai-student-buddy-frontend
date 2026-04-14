@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "home":          "الرئيسية",
+    "subjects":      "المواد",
+    "ai_tutor":      "المعلم الذكي",
+    "exercises":     "التمارين",
+    "pronunciation": "النطق",
+    "admin":         "الإدارة",
+    "leaderboard":   "لوحة الترتيب"
+  }
+}

@@ -1,0 +1,61 @@
+<div class="max-w-2xl mx-auto">
+
+  @if (!score) {
+    <div class="card text-center py-12 text-anchor/40">
+      <span class="material-symbols-outlined text-5xl block mb-3">error</span>
+      <p>No results found. <a routerLink="/pronunciation" class="text-secondary underline">Try again</a></p>
+    </div>
+  } @else {
+
+    <!-- Score card -->
+    <div class="card text-center py-10 mb-6">
+      <div class="text-7xl mb-4">{{ score.score >= 80 ? '🎉' : score.score >= 60 ? '👍' : '📚' }}</div>
+      <div [class]="scoreColor + ' font-display text-7xl mb-2'">{{ score.score }}</div>
+      <div class="text-anchor/50 font-medium">out of 100</div>
+      <p class="mt-4 text-anchor/70 italic text-sm max-w-xs mx-auto">{{ score.feedback }}</p>
+    </div>
+
+    <!-- Transcript -->
+    <div class="card mb-4">
+      <h2 class="font-semibold text-anchor mb-2 flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary text-[20px]">record_voice_over</span>
+        What we heard
+      </h2>
+      <p class="text-anchor/70 italic">{{ score.transcript }}</p>
+    </div>
+
+    <!-- Word comparison -->
+    @if (score.wordComparison.length > 0) {
+      <div class="card mb-6">
+        <h2 class="font-semibold text-anchor mb-3 flex items-center gap-2">
+          <span class="material-symbols-outlined text-ai-purple text-[20px]">spellcheck</span>
+          Word by Word
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          @for (w of score.wordComparison; track $index) {
+            <span [class.bg-green-100]="w.correct"
+                  [class.text-green-700]="w.correct"
+                  [class.bg-red-100]="!w.correct"
+                  [class.text-red-600]="!w.correct"
+                  class="px-3 py-1 rounded-full text-sm font-semibold"
+                  [title]="!w.correct ? 'You said: ' + w.yourVersion : ''">
+              {{ w.word }}
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+      <a routerLink="/pronunciation" class="btn-secondary flex-1 flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span> Try Another
+      </a>
+      <a [routerLink]="['/pronunciation', textId]" class="btn-primary flex-1 flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">replay</span> Try Again
+      </a>
+    </div>
+
+  }
+
+</div>

@@ -1,0 +1,40 @@
+<div class="max-w-2xl mx-auto text-center">
+
+  @if (loading) {
+    <div class="card animate-pulse h-48 bg-anchor/5 mb-6"></div>
+  } @else if (text) {
+
+    <!-- Text card -->
+    <div class="card mb-8 py-10">
+      <span class="material-symbols-outlined text-secondary text-4xl mb-4 block">record_voice_over</span>
+      <p class="text-2xl font-semibold text-anchor leading-relaxed">{{ text.text }}</p>
+      <button (click)="listen()" class="mt-4 flex items-center gap-2 mx-auto px-4 py-2 rounded-full bg-secondary/15 text-secondary font-semibold text-sm hover:bg-secondary/25 transition-colors">
+        <span class="material-symbols-outlined text-[18px]">volume_up</span> Listen (normal speed)
+      </button>
+    </div>
+
+    <!-- Record button -->
+    <div class="mb-8">
+      <button (click)="toggleRecord()"
+              [class.bg-red-500]="recorder.isRecording$ | async"
+              [class.bg-primary]="!(recorder.isRecording$ | async)"
+              class="w-24 h-24 rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(255,107,53,0.35)] hover:scale-105 transition-all mx-auto">
+        <span class="material-symbols-outlined text-white text-4xl">
+          {{ (recorder.isRecording$ | async) ? 'stop' : 'mic' }}
+        </span>
+      </button>
+      <p class="mt-4 text-sm font-medium text-anchor/60">
+        {{ (recorder.isRecording$ | async) ? 'Recording... tap to stop' : 'Tap to record' }}
+      </p>
+    </div>
+
+    @if (submitting) {
+      <div class="flex items-center justify-center gap-2 text-secondary font-medium">
+        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+        Analyzing your pronunciation...
+      </div>
+    }
+
+  }
+
+</div>

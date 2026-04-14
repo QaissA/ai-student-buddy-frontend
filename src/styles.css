@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fredoka+One&family=Noto+Naskh+Arabic:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base ── */
+html, body {
+  height: 100%;
+  background-color: #FFFBF0;
+  color: #2C3E50;
+  font-family: "Be Vietnam Pro", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+[dir="rtl"] {
+  font-family: "Noto Naskh Arabic", serif;
+}
+
+/* ── Component classes ── */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-semibold px-6 py-3 rounded-[1.25rem] cursor-pointer transition-opacity duration-150 inline-flex items-center justify-center no-underline;
+
+    &:hover { opacity: 0.9; }
+    &:disabled { opacity: 0.6; cursor: not-allowed; }
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-anchor font-semibold px-6 py-3 rounded-[1.25rem] cursor-pointer transition-opacity duration-150 inline-flex items-center justify-center no-underline;
+
+    &:hover { opacity: 0.9; }
+  }
+
+  .card {
+    @apply bg-white rounded-[1.5rem] shadow-card p-6;
+  }
+
+  .badge-achievement {
+    @apply bg-achievement text-anchor font-display text-sm px-3 py-1 rounded-full inline-block;
+  }
+
+  .badge-ai {
+    @apply bg-ai-purple text-white font-semibold text-xs px-3 py-1 rounded-full inline-block;
+  }
+
+  .sidebar-bg {
+    @apply bg-anchor text-white;
+  }
+
+  .input-field {
+    @apply w-full bg-white border-0 rounded-[1.25rem] px-4 py-3 text-anchor shadow-card;
+    @apply placeholder:text-anchor/40;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
+  }
+}

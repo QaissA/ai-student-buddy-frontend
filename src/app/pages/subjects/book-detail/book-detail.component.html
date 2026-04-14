@@ -1,0 +1,128 @@
+<!-- Full-bleed accent background — extends over parent's p-8 -->
+<div class="-m-8 min-h-screen"
+     [style.background-color]="bgColor"
+     [style.color]="textColor">
+
+  <div class="max-w-3xl mx-auto px-8 pt-8 pb-32">
+
+    <!-- ── Back button ── -->
+    <a [routerLink]="book ? ['/subjects', book.subjectId] : ['/subjects']"
+       class="inline-flex items-center gap-1.5 text-sm font-semibold mb-6
+              px-4 py-2 rounded-full transition-all"
+       [style.background-color]="badgeColor"
+       [style.color]="textColor">
+      <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+      Back to Books
+    </a>
+
+    <!-- ── Book header ── -->
+    @if (book) {
+      <div class="mb-8">
+        <p class="text-sm font-semibold uppercase tracking-widest opacity-50 mb-2">
+          Book {{ padOrder(book.order || 1) }}
+        </p>
+        <h1 class="font-display text-5xl mb-2 leading-tight" [style.color]="textColor">
+          {{ book.title }}
+        </h1>
+        @if (book.description) {
+          <p class="opacity-70 font-medium">{{ book.description }}</p>
+        }
+
+        <!-- Progress row -->
+        <div class="flex items-center gap-4 mt-6">
+          <div class="flex-1 h-2 rounded-full" [style.background-color]="badgeColor">
+            <div class="h-2 rounded-full bg-white/60 w-0"></div>
+          </div>
+          <span class="text-sm font-semibold opacity-70">{{ lessons.length }} lessons</span>
+        </div>
+      </div>
+    }
+
+    <!-- ── Loading skeletons ── -->
+    @if (loading) {
+      <div class="flex flex-col gap-3">
+        @for (_ of [1,2,3,4]; track $index) {
+          <div class="h-20 rounded-[1.25rem] animate-pulse" [style.background-color]="badgeColor"></div>
+        }
+      </div>
+
+    } @else if (lessons.length === 0) {
+      <div class="text-center py-20 opacity-50">
+        <span class="material-symbols-outlined text-6xl mb-3 block">menu_book</span>
+        <p class="font-medium">No lessons published yet.</p>
+      </div>
+
+    } @else {
+      <!-- ── Lesson rows ── -->
+      <div class="flex flex-col gap-3">
+        @for (lesson of lessons; track lesson.id; let i = $index) {
+          <a [routerLink]="['/lessons', lesson.id]"
+             class="flex items-center gap-4 px-5 py-4 rounded-[1.25rem] cursor-pointer
+                    transition-all duration-200 hover:scale-[1.01]"
+             [style.background-color]="badgeColor"
+             [style.backdrop-filter]="'blur(8px)'"
+             [style.color]="textColor">
+
+            <!-- Order badge -->
+            <div class="w-11 h-11 rounded-full flex items-center justify-center
+                        flex-shrink-0 font-display text-lg"
+                 [style.background-color]="'rgba(255,255,255,0.25)'"
+                 [style.color]="textColor">
+              {{ padOrder(lesson.order || i + 1) }}
+            </div>
+
+            <!-- Title + type -->
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold truncate" [style.color]="textColor">{{ lesson.title }}</h3>
+              <span class="text-xs opacity-60 uppercase tracking-wide font-semibold">
+                {{ lesson.type === 'PDF' ? '📄 PDF' : '📝 Text' }}
+              </span>
+            </div>
+
+            <!-- Type pill -->
+            <span class="hidden sm:flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
+                  [style.background-color]="'rgba(255,255,255,0.25)'"
+                  [style.color]="textColor">
+              {{ lesson.type }}
+            </span>
+
+            <!-- Chevron -->
+            <span class="material-symbols-outlined opacity-60 flex-shrink-0">chevron_right</span>
+          </a>
+        }
+      </div>
+    }
+
+  </div>
+
+  <!-- ── Bottom action bar ── -->
+  @if (!loading && lessons.length > 0) {
+    <div class="fixed bottom-0 left-0 right-0 px-8 py-4 flex items-center justify-between
+                backdrop-blur-md border-t z-10"
+         [style.background-color]="'rgba(255,255,255,0.15)'"
+         [style.border-color]="'rgba(255,255,255,0.2)'">
+
+      <!-- Stats -->
+      <div class="flex items-center gap-6">
+        <div class="text-center">
+          <p class="font-display text-2xl" [style.color]="textColor">{{ lessons.length }}</p>
+          <p class="text-xs opacity-60 uppercase tracking-wide font-semibold">Lessons</p>
+        </div>
+        <div class="text-center">
+          <p class="font-display text-2xl" [style.color]="textColor">
+            {{ lessons.filter(l => l.type === 'PDF').length }}
+          </p>
+          <p class="text-xs opacity-60 uppercase tracking-wide font-semibold">PDFs</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <a [routerLink]="['/lessons', lessons[0].id]"
+         class="btn-primary flex items-center gap-2">
+        Continue Learning
+        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </a>
+    </div>
+  }
+
+</div>

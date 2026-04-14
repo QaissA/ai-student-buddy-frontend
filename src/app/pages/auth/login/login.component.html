@@ -1,0 +1,67 @@
+<!-- Editorial Play background -->
+<div class="min-h-screen bg-surface flex items-center justify-center p-6"
+     style="background-image: radial-gradient(circle, #2C3E50 1px, transparent 1px); background-size: 24px 24px; background-color: #FFFBF0;">
+
+  <div class="w-full max-w-md">
+
+    <!-- Logo & mascot area -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-primary shadow-[0_8px_32px_rgba(255,107,53,0.35)] mb-4">
+        <span class="material-symbols-outlined text-white text-4xl">school</span>
+      </div>
+      <h1 class="font-display text-4xl text-anchor mb-1">EduPlatform</h1>
+      <p class="text-anchor/60 text-sm font-medium">Learning is an adventure! 🚀</p>
+    </div>
+
+    <!-- Form card with gradient border -->
+    <div class="relative p-[3px] rounded-[1.5rem]"
+         style="background: linear-gradient(135deg, #FF6B35, #4ECDC4, #9B59B6);">
+      <div class="bg-white rounded-[calc(1.5rem-3px)] p-8 shadow-[0_20px_40px_-12px_rgba(255,107,53,0.25)]">
+
+        @if (error) {
+          <div class="mb-4 px-4 py-3 rounded-[1rem] bg-red-50 text-red-600 text-sm font-medium">
+            {{ error }}
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-5">
+
+          <!-- Email -->
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-anchor/40 text-[20px]">alternate_email</span>
+            <input formControlName="email" type="email" placeholder="Email address"
+                   class="input-field pl-12" />
+          </div>
+
+          <!-- Password -->
+          <div class="relative">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-anchor/40 text-[20px]">lock</span>
+            <input formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="Password"
+                   class="input-field pl-12 pr-12" />
+            <button type="button" (click)="showPassword = !showPassword"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-anchor/40 hover:text-anchor transition-colors">
+              <span class="material-symbols-outlined text-[20px]">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+
+          <!-- Submit -->
+          <button type="submit" [disabled]="loading"
+                  class="btn-primary w-full mt-2 flex items-center justify-center gap-2 disabled:opacity-60">
+            @if (loading) {
+              <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+            }
+            Let's Go! 🎉
+          </button>
+
+        </form>
+
+        <p class="text-center text-sm text-anchor/60 mt-6">
+          New to the adventure?
+          <a routerLink="/register" class="text-primary font-semibold hover:underline">Join the Quest!</a>
+        </p>
+
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,143 @@
+<div class="flex flex-col h-[calc(100vh-4rem)] relative overflow-hidden">
+
+  <!-- ── Decorative blobs ─────────────────────────────────────────────────── -->
+  <div class="fixed top-32 -left-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-10 animate-pulse"></div>
+  <div class="fixed bottom-48 -right-24 w-96 h-96 bg-ai-purple/10 rounded-full blur-3xl -z-10 animate-pulse" style="animation-delay:1s"></div>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="flex items-center justify-between px-6 py-3 shadow-lg z-10 flex-shrink-0"
+          style="background: linear-gradient(to right, #9B59B6, #803f9b);">
+
+    <div class="flex items-center gap-3">
+      <button (click)="endSession()" class="text-white/70 hover:text-white transition-colors">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <span class="font-display text-2xl text-white tracking-wide">🤖 AI Tutor</span>
+    </div>
+
+    @if (session) {
+      <div class="hidden md:flex items-center gap-2">
+        <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-bold border border-white/10">
+          {{ session.language }}
+        </span>
+        <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-bold border border-white/10">
+          {{ session.level }}
+        </span>
+        <span class="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-white text-sm font-bold border border-white/10">
+          {{ session.topic }}
+        </span>
+      </div>
+    }
+
+    <button (click)="endSession()"
+            class="flex items-center gap-2 border-2 border-white/30 hover:border-red-400 hover:bg-red-500 text-white px-4 py-1.5 rounded-full transition-all text-sm font-bold">
+      End Session
+      <span class="material-symbols-outlined text-lg">close</span>
+    </button>
+  </header>
+
+  <!-- ── Main voice area ─────────────────────────────────────────────────── -->
+  <main class="flex-1 flex flex-col items-center justify-center gap-6 p-6 overflow-hidden">
+
+    <!-- Robot mascot -->
+    <div class="relative flex flex-col items-center">
+      <div class="absolute inset-0 bg-ai-purple/20 rounded-full blur-3xl scale-150 animate-pulse"></div>
+      <div class="w-40 h-40 bg-white rounded-full flex items-center justify-center border-8 border-ai-purple/30 shadow-2xl relative z-10">
+        <span class="text-7xl" [class.animate-bounce]="status === 'idle'">🤖</span>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="flex flex-col items-center gap-1 text-center">
+      <div class="flex items-center gap-2 font-bold"
+           [class.text-ai-purple]="status !== 'idle'"
+           [class.text-anchor]="status === 'idle'">
+        @if (status === 'thinking') {
+          <span class="material-symbols-outlined animate-spin text-xl"
+                style="font-variation-settings:'wght' 700">progress_activity</span>
+        } @else if (status !== 'idle') {
+          <span class="material-symbols-outlined text-xl"
+                style="font-variation-settings:'wght' 700">graphic_eq</span>
+        }
+        <span class="tracking-widest uppercase text-sm">{{ statusLabel }}</span>
+      </div>
+
+      <!-- Last exchange -->
+      @if (lastTranscript) {
+        <p class="text-xs text-anchor/50 mt-1 max-w-xs truncate">You: {{ lastTranscript }}</p>
+      }
+      @if (lastReply && (status === 'speaking' || status === 'idle')) {
+        <p class="text-sm text-anchor/80 mt-2 max-w-sm text-center leading-snug bg-white/70 backdrop-blur-sm px-4 py-2 rounded-[1.25rem] shadow-sm">
+          {{ lastReply }}
+        </p>
+      }
+    </div>
+
+    <!-- Wave visualizer -->
+    <div class="flex items-center justify-center gap-1.5 h-16">
+      @for (delay of waveBars; track $index) {
+        <div class="w-2 bg-ai-purple rounded-full transition-all"
+             [class.wave-bar]="waveActive"
+             [class.wave-bar-still]="!waveActive"
+             [style.animation-delay]="delay + 's'">
+        </div>
+      }
+    </div>
+
+    <!-- Mic button -->
+    <div class="flex flex-col items-center gap-6 w-full max-w-xs">
+      <button (click)="toggleRecording()"
+              [disabled]="status === 'thinking'"
+              class="relative group disabled:opacity-50 disabled:cursor-not-allowed">
+        <!-- Pulse ring (idle only) -->
+        @if (status === 'idle') {
+          <div class="absolute inset-0 rounded-full mic-pulse"
+               style="background: #FF6B35"></div>
+        }
+        <!-- Stop ring (recording) -->
+        @if (status === 'recording') {
+          <div class="absolute inset-0 rounded-full animate-ping opacity-30"
+               style="background: #e53e3e"></div>
+        }
+        <div class="relative w-28 h-28 rounded-full flex items-center justify-center shadow-2xl z-20 hover:scale-105 active:scale-95 transition-transform"
+             [style.background]="status === 'recording' ? 'linear-gradient(135deg,#e53e3e,#c53030)' : 'linear-gradient(135deg,#FF6B35,#cc4d1a)'"
+             [style.box-shadow]="status === 'recording' ? '0 8px 40px rgba(229,62,62,0.5)' : '0 8px 40px rgba(255,107,53,0.4)'">
+          <span class="material-symbols-outlined text-5xl text-white"
+                style="font-variation-settings:'FILL' 1">
+            {{ status === 'recording' ? 'stop' : 'mic' }}
+          </span>
+        </div>
+      </button>
+
+      <!-- Volume + mute controls -->
+      @if (status === 'speaking' || lastReply) {
+        <div class="w-full flex items-center gap-3 bg-white/60 backdrop-blur-sm px-4 py-3 rounded-full border border-ai-purple/10 shadow-sm">
+          <button class="text-ai-purple hover:bg-ai-purple/10 p-1.5 rounded-full transition-colors" (click)="replayLast()">
+            <span class="material-symbols-outlined text-[20px]">replay</span>
+          </button>
+          <input type="range" min="0" max="1" step="0.05" [value]="volume" (input)="setVolume($event)"
+                 class="flex-1 accent-ai-purple h-1.5 rounded-lg cursor-pointer" />
+          <button class="text-ai-purple hover:bg-ai-purple/10 p-1.5 rounded-full transition-colors">
+            <span class="material-symbols-outlined text-[20px]">volume_up</span>
+          </button>
+        </div>
+      }
+    </div>
+
+  </main>
+
+  <!-- ── Suggestion pills ─────────────────────────────────────────────────── -->
+  <footer class="px-6 pb-6 pt-2 flex-shrink-0"
+          style="background: linear-gradient(to top, #FFFBF0 70%, transparent)">
+    <div class="flex gap-3 overflow-x-auto pb-1 justify-center flex-wrap">
+      @for (s of suggestions; track s.label) {
+        <button (click)="sendSuggestion(s.label)"
+                [disabled]="status !== 'idle'"
+                class="whitespace-nowrap bg-white border-2 border-ai-purple/20 hover:border-ai-purple hover:bg-ai-purple/5 text-ai-purple px-5 py-2.5 rounded-full text-sm font-bold transition-all active:scale-95 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+          {{ s.label }} {{ s.emoji }}
+        </button>
+      }
+    </div>
+  </footer>
+
+</div>

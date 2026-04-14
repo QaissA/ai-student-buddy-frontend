@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "home":          "Accueil",
+    "subjects":      "Matières",
+    "ai_tutor":      "Tuteur IA",
+    "exercises":     "Exercices",
+    "pronunciation": "Prononciation",
+    "admin":         "Admin",
+    "leaderboard":   "Classement"
+  }
+}

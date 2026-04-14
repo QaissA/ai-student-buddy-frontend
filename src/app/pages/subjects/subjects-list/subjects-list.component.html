@@ -1,0 +1,84 @@
+<div class="max-w-4xl mx-auto">
+
+  <!-- ── Header ── -->
+  <div class="flex items-start justify-between mb-8">
+    <div>
+      <h1 class="font-display text-4xl text-anchor mb-1">My Subjects 📚</h1>
+      <p class="text-anchor/60 font-medium">Choose what you want to learn today!</p>
+    </div>
+    @if (!loading && subjects.length > 0) {
+      <span class="bg-secondary/15 text-secondary font-semibold text-sm px-4 py-2 rounded-full mt-1">
+        Enrolled in {{ enrolledCount }} subjects
+      </span>
+    }
+  </div>
+
+  <!-- ── Loading skeletons ── -->
+  @if (loading) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="card animate-pulse h-52 bg-anchor/5"></div>
+      }
+    </div>
+  } @else {
+
+    <!-- ── Subject cards 2-col grid ── -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+      @for (subject of subjects; track subject.id; let i = $index) {
+        <a [routerLink]="['/subjects', subject.id]"
+           class="card flex flex-col cursor-pointer transition-all duration-200
+                  hover:-translate-y-1.5 hover:scale-[1.02]"
+           [style.box-shadow]="'0 4px 24px rgba(44,62,80,0.08)'"
+           style="hover:box-shadow: 0 20px 40px -12px rgba(44,62,80,0.20)">
+
+          <!-- Flag + counts row -->
+          <div class="flex items-start justify-between mb-3">
+            <span class="text-5xl leading-none">{{ langFlags[subject.language] ?? '📚' }}</span>
+            @if ((subject.bookCount ?? 0) > 0) {
+              <div class="text-[11px] text-anchor/40 font-semibold uppercase tracking-widest text-right leading-5">
+                <span>{{ subject.bookCount }} Books</span><br>
+                <span>{{ subject.lessonCount }} Lessons</span>
+              </div>
+            }
+          </div>
+
+          <!-- Subject name -->
+          <h2 class="font-display text-2xl text-anchor mb-2 leading-tight">{{ subject.name }}</h2>
+
+          <!-- Accent bar -->
+          <div class="h-1 w-10 rounded-full mb-5"
+               [style.background-color]="accentColors[i % accentColors.length]"></div>
+
+          <!-- Continue Learning button -->
+          <div class="mt-auto flex items-center justify-center gap-2 py-3 rounded-[1.25rem]
+                      font-semibold text-sm transition-opacity duration-150 hover:opacity-90"
+               [style.background-color]="accentColors[i % accentColors.length]"
+               [style.color]="accentTextColors[i % accentTextColors.length]">
+            Continue Learning
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </div>
+
+        </a>
+      }
+    </div>
+
+    <!-- ── Empty state ── -->
+    @if (subjects.length === 0) {
+      <div class="text-center py-16 text-anchor/40">
+        <span class="material-symbols-outlined text-6xl mb-4 block">library_books</span>
+        <p class="font-medium">No subjects available yet.</p>
+      </div>
+    }
+
+    <!-- ── Explore More (dashed CTA) ── -->
+    <div class="border-2 border-dashed border-secondary/40 rounded-[1.5rem] p-8
+                text-center cursor-pointer transition-all duration-200
+                hover:border-secondary hover:bg-secondary/5">
+      <span class="text-secondary font-semibold text-base">
+        + Explore More Subjects
+      </span>
+    </div>
+
+  }
+
+</div>

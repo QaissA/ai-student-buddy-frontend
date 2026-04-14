@@ -1,0 +1,137 @@
+<div class="max-w-5xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <a routerLink="/admin" class="text-xs font-semibold text-anchor/40 hover:text-anchor transition-colors uppercase tracking-widest">
+        ← Admin
+      </a>
+      <h1 class="font-display text-3xl text-anchor mt-1">Manage Subjects</h1>
+    </div>
+    <button (click)="openCreate()"
+            class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full
+                   font-semibold text-sm hover:opacity-90 transition-opacity shadow-sm">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      New Subject
+    </button>
+  </div>
+
+  <!-- Form modal -->
+  @if (showForm) {
+    <div class="fixed inset-0 bg-anchor/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg p-8">
+        <h2 class="font-display text-2xl text-anchor mb-6">
+          {{ editId ? 'Edit Subject' : 'New Subject' }}
+        </h2>
+
+        @if (error) {
+          <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium">{{ error }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Name *</label>
+            <input formControlName="name" type="text" placeholder="e.g. French I"
+                   class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                          focus:outline-none focus:border-primary transition-colors bg-surface" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Language *</label>
+            <select formControlName="language"
+                    class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                           focus:outline-none focus:border-primary transition-colors bg-surface">
+              @for (l of languages; track l) {
+                <option [value]="l">{{ langLabels[l] }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Description</label>
+            <textarea formControlName="description" rows="3" placeholder="Brief description…"
+                      class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                             focus:outline-none focus:border-primary transition-colors bg-surface resize-none">
+            </textarea>
+          </div>
+
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" formControlName="isActive" class="w-4 h-4 accent-primary" />
+            <span class="text-sm font-semibold text-anchor">Active (visible to students)</span>
+          </label>
+
+          <div class="flex gap-3 pt-2">
+            <button type="submit" [disabled]="form.invalid || saving"
+                    class="flex-1 bg-primary text-white py-3 rounded-xl font-semibold text-sm
+                           hover:opacity-90 transition-opacity disabled:opacity-50">
+              {{ saving ? 'Saving…' : editId ? 'Save Changes' : 'Create Subject' }}
+            </button>
+            <button type="button" (click)="showForm = false"
+                    class="px-6 py-3 rounded-xl border border-anchor/20 text-anchor/70 font-semibold
+                           text-sm hover:bg-anchor/5 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Table -->
+  <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm overflow-hidden">
+    @if (loading) {
+      @for (_ of [1,2,3]; track $index) {
+        <div class="px-6 py-4 border-b border-anchor/8 flex items-center gap-4">
+          <div class="h-5 w-40 bg-anchor/10 rounded animate-pulse"></div>
+          <div class="h-4 w-24 bg-anchor/10 rounded animate-pulse ml-auto"></div>
+        </div>
+      }
+    } @else if (subjects.length === 0) {
+      <div class="text-center py-16 text-anchor/40">
+        <span class="material-symbols-outlined text-5xl block mb-3">folder_open</span>
+        <p class="font-semibold">No subjects yet — create the first one.</p>
+      </div>
+    } @else {
+      <!-- Table header -->
+      <div class="grid grid-cols-[1fr_140px_100px_80px_120px] gap-4 px-6 py-3 bg-anchor/3 border-b border-anchor/8
+                  text-xs font-bold uppercase tracking-widest text-anchor/40">
+        <span>Subject</span>
+        <span>Language</span>
+        <span>Books</span>
+        <span>Status</span>
+        <span class="text-right">Actions</span>
+      </div>
+
+      @for (s of subjects; track s.id) {
+        <div class="grid grid-cols-[1fr_140px_100px_80px_120px] gap-4 items-center px-6 py-4
+                    border-b border-anchor/8 hover:bg-anchor/2 transition-colors last:border-0">
+          <div>
+            <p class="font-semibold text-anchor text-sm">{{ s.name }}</p>
+            @if (s.description) {
+              <p class="text-xs text-anchor/50 truncate mt-0.5">{{ s.description }}</p>
+            }
+          </div>
+          <span class="text-sm text-anchor/70">{{ langLabels[s.language] }}</span>
+          <span class="text-sm text-anchor/70">{{ s.bookCount ?? 0 }} books</span>
+          <span [ngClass]="s.isActive !== false ? 'bg-secondary/15 text-secondary' : 'bg-anchor/10 text-anchor/50'"
+                class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+            {{ s.isActive !== false ? 'Active' : 'Hidden' }}
+          </span>
+          <div class="flex items-center gap-2 justify-end">
+            <button (click)="openEdit(s)"
+                    class="w-8 h-8 rounded-full bg-secondary/15 hover:bg-secondary/25 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-secondary">edit</span>
+            </button>
+            <button (click)="remove(s)"
+                    class="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-red-500">delete</span>
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+</div>

@@ -1,0 +1,169 @@
+<div class="max-w-5xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <a routerLink="/admin" class="text-xs font-semibold text-anchor/40 hover:text-anchor transition-colors uppercase tracking-widest">
+        ← Admin
+      </a>
+      <h1 class="font-display text-3xl text-anchor mt-1">Manage Books</h1>
+    </div>
+    @if (selectedSubjectId) {
+      <button (click)="openCreate()"
+              class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full
+                     font-semibold text-sm hover:opacity-90 transition-opacity shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        New Book
+      </button>
+    }
+  </div>
+
+  <!-- Subject picker -->
+  <div class="mb-6">
+    <p class="text-xs font-bold uppercase tracking-widest text-anchor/40 mb-2">Select Subject</p>
+    @if (loadingSubjects) {
+      <div class="flex gap-2">
+        @for (_ of [1,2,3]; track $index) {
+          <div class="h-9 w-28 rounded-full bg-anchor/10 animate-pulse"></div>
+        }
+      </div>
+    } @else {
+      <div class="flex flex-wrap gap-2">
+        @for (s of subjects; track s.id) {
+          <button (click)="selectSubject(s.id)"
+                  [ngClass]="s.id === selectedSubjectId
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-white border border-anchor/20 text-anchor/70 hover:border-primary hover:text-primary'"
+                  class="px-4 py-2 rounded-full text-sm font-semibold transition-all">
+            {{ s.name }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Form modal -->
+  @if (showForm) {
+    <div class="fixed inset-0 bg-anchor/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg p-8">
+        <h2 class="font-display text-2xl text-anchor mb-6">{{ editId ? 'Edit Book' : 'New Book' }}</h2>
+
+        @if (error) {
+          <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium">{{ error }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-4">
+          @if (!editId) {
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Subject *</label>
+              <select formControlName="subjectId"
+                      class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                             focus:outline-none focus:border-primary bg-surface">
+                @for (s of subjects; track s.id) {
+                  <option [value]="s.id">{{ s.name }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Title *</label>
+            <input formControlName="title" type="text" placeholder="e.g. French for Beginners (A1)"
+                   class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                          focus:outline-none focus:border-primary bg-surface" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Description</label>
+            <textarea formControlName="description" rows="2" placeholder="Brief description…"
+                      class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                             focus:outline-none focus:border-primary bg-surface resize-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Order</label>
+            <input formControlName="order" type="number" min="1"
+                   class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                          focus:outline-none focus:border-primary bg-surface" />
+          </div>
+
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" formControlName="isPublished" class="w-4 h-4 accent-primary" />
+            <span class="text-sm font-semibold text-anchor">Published (visible to students)</span>
+          </label>
+
+          <div class="flex gap-3 pt-2">
+            <button type="submit" [disabled]="form.invalid || saving"
+                    class="flex-1 bg-primary text-white py-3 rounded-xl font-semibold text-sm
+                           hover:opacity-90 transition-opacity disabled:opacity-50">
+              {{ saving ? 'Saving…' : editId ? 'Save Changes' : 'Create Book' }}
+            </button>
+            <button type="button" (click)="showForm = false"
+                    class="px-6 py-3 rounded-xl border border-anchor/20 text-anchor/70 font-semibold
+                           text-sm hover:bg-anchor/5 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Books table -->
+  @if (!selectedSubjectId) {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm text-center py-16 text-anchor/40">
+      <span class="material-symbols-outlined text-5xl block mb-3">auto_stories</span>
+      <p class="font-semibold">Select a subject above to manage its books.</p>
+    </div>
+  } @else if (loadingBooks) {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm overflow-hidden">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="px-6 py-4 border-b border-anchor/8 flex gap-4">
+          <div class="h-5 w-48 bg-anchor/10 rounded animate-pulse"></div>
+        </div>
+      }
+    </div>
+  } @else if (books.length === 0) {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm text-center py-16 text-anchor/40">
+      <span class="material-symbols-outlined text-5xl block mb-3">auto_stories</span>
+      <p class="font-semibold">No books yet in this subject.</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm overflow-hidden">
+      <div class="grid grid-cols-[40px_1fr_80px_100px_120px] gap-4 px-6 py-3 bg-anchor/3 border-b border-anchor/8
+                  text-xs font-bold uppercase tracking-widest text-anchor/40">
+        <span>#</span><span>Title</span><span>Lessons</span><span>Status</span><span class="text-right">Actions</span>
+      </div>
+      @for (b of books; track b.id) {
+        <div class="grid grid-cols-[40px_1fr_80px_100px_120px] gap-4 items-center px-6 py-4
+                    border-b border-anchor/8 hover:bg-anchor/2 transition-colors last:border-0">
+          <span class="font-display text-lg text-anchor/40">{{ b.order }}</span>
+          <div>
+            <p class="font-semibold text-anchor text-sm">{{ b.title }}</p>
+            @if (b.description) {
+              <p class="text-xs text-anchor/50 truncate mt-0.5">{{ b.description }}</p>
+            }
+          </div>
+          <span class="text-sm text-anchor/60">{{ b.lessonCount ?? 0 }}</span>
+          <span [ngClass]="b.isPublished ? 'bg-secondary/15 text-secondary' : 'bg-anchor/10 text-anchor/50'"
+                class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+            {{ b.isPublished ? 'Live' : 'Draft' }}
+          </span>
+          <div class="flex items-center gap-2 justify-end">
+            <button (click)="openEdit(b)"
+                    class="w-8 h-8 rounded-full bg-secondary/15 hover:bg-secondary/25 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-secondary">edit</span>
+            </button>
+            <button (click)="remove(b)"
+                    class="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-red-500">delete</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

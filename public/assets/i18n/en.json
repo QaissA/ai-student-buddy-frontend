@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "home":          "Home",
+    "subjects":      "Subjects",
+    "ai_tutor":      "AI Tutor",
+    "exercises":     "Exercises",
+    "pronunciation": "Pronunciation",
+    "admin":         "Admin",
+    "leaderboard":   "Leaderboard"
+  }
+}

@@ -1,0 +1,274 @@
+<div class="max-w-5xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <a routerLink="/admin" class="text-xs font-semibold text-anchor/40 hover:text-anchor transition-colors uppercase tracking-widest">
+        ← Admin
+      </a>
+      <h1 class="font-display text-3xl text-anchor mt-1">Manage Lessons</h1>
+    </div>
+    @if (selectedBookId) {
+      <button (click)="openCreate()"
+              class="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-full
+                     font-semibold text-sm hover:opacity-90 transition-opacity shadow-sm">
+        <span class="material-symbols-outlined text-[18px]">add</span>
+        New Lesson
+      </button>
+    }
+  </div>
+
+  <!-- Subject → Book pickers -->
+  <div class="flex flex-col gap-3 mb-6">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-widest text-anchor/40 mb-2">1. Select Subject</p>
+      @if (loadingSubjects) {
+        <div class="flex gap-2">@for (_ of [1,2,3]; track $index) { <div class="h-9 w-24 rounded-full bg-anchor/10 animate-pulse"></div> }</div>
+      } @else {
+        <div class="flex flex-wrap gap-2">
+          @for (s of subjects; track s.id) {
+            <button (click)="selectSubject(s.id)"
+                    [ngClass]="s.id === selectedSubjectId ? 'bg-primary text-white' : 'bg-white border border-anchor/20 text-anchor/70 hover:border-primary'"
+                    class="px-4 py-2 rounded-full text-sm font-semibold transition-all">
+              {{ s.name }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    @if (selectedSubjectId) {
+      <div>
+        <p class="text-xs font-bold uppercase tracking-widest text-anchor/40 mb-2">2. Select Book</p>
+        @if (loadingBooks) {
+          <div class="flex gap-2">@for (_ of [1,2]; track $index) { <div class="h-9 w-32 rounded-full bg-anchor/10 animate-pulse"></div> }</div>
+        } @else if (books.length === 0) {
+          <p class="text-sm text-anchor/40 italic">No books in this subject yet.</p>
+        } @else {
+          <div class="flex flex-wrap gap-2">
+            @for (b of books; track b.id) {
+              <button (click)="selectBook(b.id)"
+                      [ngClass]="b.id === selectedBookId ? 'bg-secondary text-white' : 'bg-white border border-anchor/20 text-anchor/70 hover:border-secondary'"
+                      class="px-4 py-2 rounded-full text-sm font-semibold transition-all">
+                {{ b.title }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Lesson form modal -->
+  @if (showForm) {
+    <div class="fixed inset-0 bg-anchor/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-lg p-8 max-h-[90vh] overflow-y-auto">
+        <h2 class="font-display text-2xl text-anchor mb-6">{{ editId ? 'Edit Lesson' : 'New Lesson' }}</h2>
+
+        @if (error) {
+          <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm font-medium">{{ error }}</div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="flex flex-col gap-4">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Title *</label>
+            <input formControlName="title" type="text" placeholder="e.g. Greetings & Introductions"
+                   class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                          focus:outline-none focus:border-primary bg-surface" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Type</label>
+            <div class="flex gap-3">
+              @for (t of ['TEXT', 'PDF']; track t) {
+                <label class="flex-1 flex items-center gap-2 px-4 py-3 rounded-xl border-2 cursor-pointer transition-all"
+                       [ngClass]="form.get('type')?.value === t ? 'border-primary bg-primary/5' : 'border-anchor/15'">
+                  <input type="radio" formControlName="type" [value]="t" class="sr-only" />
+                  <span class="material-symbols-outlined text-[18px]"
+                        [ngClass]="form.get('type')?.value === t ? 'text-primary' : 'text-anchor/40'">
+                    {{ t === 'TEXT' ? 'article' : 'picture_as_pdf' }}
+                  </span>
+                  <span class="text-sm font-semibold"
+                        [ngClass]="form.get('type')?.value === t ? 'text-primary' : 'text-anchor/60'">
+                    {{ t }}
+                  </span>
+                </label>
+              }
+            </div>
+          </div>
+
+          @if (form.get('type')?.value === 'TEXT') {
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Content</label>
+              <textarea formControlName="content" rows="8" placeholder="Lesson content here…"
+                        class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                               focus:outline-none focus:border-primary bg-surface resize-y"></textarea>
+            </div>
+          }
+
+          @if (form.get('type')?.value === 'PDF') {
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">
+                PDF File {{ editId ? '(leave empty to keep existing)' : '*' }}
+              </label>
+              <label class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-anchor/20
+                            hover:border-primary cursor-pointer transition-colors">
+                <span class="material-symbols-outlined text-[20px] text-anchor/40">upload_file</span>
+                <span class="text-sm text-anchor/60">
+                  {{ pdfFile ? pdfFile.name : 'Choose PDF (max 50MB)' }}
+                </span>
+                <input type="file" accept="application/pdf" (change)="onPdfChange($event)" class="sr-only" />
+              </label>
+            </div>
+          }
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-anchor/50 mb-1.5">Order</label>
+            <input formControlName="order" type="number" min="1"
+                   class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                          focus:outline-none focus:border-primary bg-surface" />
+          </div>
+
+          <label class="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" formControlName="isPublished" class="w-4 h-4 accent-primary" />
+            <span class="text-sm font-semibold text-anchor">Published</span>
+          </label>
+
+          <div class="flex gap-3 pt-2">
+            <button type="submit" [disabled]="form.invalid || saving"
+                    class="flex-1 bg-primary text-white py-3 rounded-xl font-semibold text-sm
+                           hover:opacity-90 disabled:opacity-50 transition-opacity">
+              {{ saving ? 'Saving…' : editId ? 'Save Changes' : 'Create Lesson' }}
+            </button>
+            <button type="button" (click)="showForm = false"
+                    class="px-6 py-3 rounded-xl border border-anchor/20 text-anchor/70 font-semibold
+                           text-sm hover:bg-anchor/5 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Image management modal -->
+  @if (imageLesson) {
+    <div class="fixed inset-0 bg-anchor/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl shadow-xl w-full max-w-xl p-8 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-display text-2xl text-anchor">Images — {{ imageLesson.title }}</h2>
+          <button (click)="imageLesson = null"
+                  class="w-8 h-8 rounded-full bg-anchor/10 hover:bg-anchor/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[18px] text-anchor">close</span>
+          </button>
+        </div>
+
+        <!-- Existing images -->
+        <div class="flex flex-col gap-2 mb-6">
+          @for (img of images; track img.id) {
+            <div class="flex items-center gap-3 p-3 rounded-xl border border-anchor/10">
+              <img [src]="img.url" [alt]="img.altText ?? ''" class="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-anchor truncate">{{ img.filename }}</p>
+                @if (img.altText) {
+                  <p class="text-xs text-anchor/50 truncate">{{ img.altText }}</p>
+                }
+              </div>
+              <button (click)="deleteImage(img)"
+                      class="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-[16px] text-red-500">delete</span>
+              </button>
+            </div>
+          }
+          @if (images.length === 0) {
+            <p class="text-sm text-anchor/40 text-center py-4">No images yet.</p>
+          }
+        </div>
+
+        <!-- Upload new image -->
+        <div class="border-t border-anchor/10 pt-6">
+          <p class="text-xs font-bold uppercase tracking-widest text-anchor/40 mb-3">Upload New Image</p>
+          <label class="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-anchor/20
+                        hover:border-secondary cursor-pointer transition-colors mb-3">
+            <span class="material-symbols-outlined text-[20px] text-anchor/40">add_photo_alternate</span>
+            <span class="text-sm text-anchor/60">
+              {{ imageFile ? imageFile.name : 'Choose image (JPEG, PNG, WebP — max 10MB)' }}
+            </span>
+            <input type="file" accept="image/*" (change)="onImageFileChange($event)" class="sr-only" />
+          </label>
+          <input [value]="imageAlt" (input)="imageAlt = $any($event.target).value"
+                 type="text" placeholder="Alt text / caption (optional)"
+                 class="w-full px-4 py-3 rounded-xl border border-anchor/20 text-anchor text-sm
+                        focus:outline-none focus:border-secondary bg-surface mb-3" />
+          <button (click)="uploadImage()" [disabled]="!imageFile || uploadingImage"
+                  class="w-full bg-secondary text-white py-3 rounded-xl font-semibold text-sm
+                         hover:opacity-90 disabled:opacity-50 transition-opacity">
+            {{ uploadingImage ? 'Uploading…' : 'Upload Image' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Lessons table -->
+  @if (!selectedBookId) {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm text-center py-16 text-anchor/40">
+      <span class="material-symbols-outlined text-5xl block mb-3">menu_book</span>
+      <p class="font-semibold">Select a subject and book above to manage lessons.</p>
+    </div>
+  } @else if (loadingLessons) {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm overflow-hidden">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="px-6 py-4 border-b border-anchor/8 flex gap-4">
+          <div class="h-5 w-48 bg-anchor/10 rounded animate-pulse"></div>
+        </div>
+      }
+    </div>
+  } @else if (lessons.length === 0) {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm text-center py-16 text-anchor/40">
+      <span class="material-symbols-outlined text-5xl block mb-3">menu_book</span>
+      <p class="font-semibold">No lessons in this book yet.</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-3xl border border-anchor/8 shadow-sm overflow-hidden">
+      <div class="grid grid-cols-[40px_1fr_80px_80px_100px_150px] gap-4 px-6 py-3 bg-anchor/3 border-b border-anchor/8
+                  text-xs font-bold uppercase tracking-widest text-anchor/40">
+        <span>#</span><span>Title</span><span>Type</span><span>Images</span><span>Status</span><span class="text-right">Actions</span>
+      </div>
+      @for (l of lessons; track l.id) {
+        <div class="grid grid-cols-[40px_1fr_80px_80px_100px_150px] gap-4 items-center px-6 py-4
+                    border-b border-anchor/8 hover:bg-anchor/2 transition-colors last:border-0">
+          <span class="font-display text-lg text-anchor/40">{{ l.order }}</span>
+          <p class="font-semibold text-anchor text-sm truncate">{{ l.title }}</p>
+          <span [ngClass]="l.type === 'PDF' ? 'bg-primary/10 text-primary' : 'bg-anchor/10 text-anchor/60'"
+                class="inline-flex px-2 py-1 rounded-full text-[10px] font-bold uppercase w-fit">
+            {{ l.type }}
+          </span>
+          <span class="text-sm text-anchor/60">{{ l.images?.length ?? 0 }}</span>
+          <span [ngClass]="l.isPublished ? 'bg-secondary/15 text-secondary' : 'bg-anchor/10 text-anchor/50'"
+                class="inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide">
+            {{ l.isPublished ? 'Live' : 'Draft' }}
+          </span>
+          <div class="flex items-center gap-1.5 justify-end">
+            <button (click)="openImages(l)" title="Manage images"
+                    class="w-8 h-8 rounded-full bg-achievement/30 hover:bg-achievement/50 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-anchor">photo_library</span>
+            </button>
+            <button (click)="openEdit(l)"
+                    class="w-8 h-8 rounded-full bg-secondary/15 hover:bg-secondary/25 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-secondary">edit</span>
+            </button>
+            <button (click)="remove(l)"
+                    class="w-8 h-8 rounded-full bg-red-50 hover:bg-red-100 transition-colors
+                           flex items-center justify-center">
+              <span class="material-symbols-outlined text-[16px] text-red-500">delete</span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

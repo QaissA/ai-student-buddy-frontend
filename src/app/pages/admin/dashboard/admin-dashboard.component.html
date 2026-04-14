@@ -1,0 +1,61 @@
+<div class="max-w-4xl mx-auto">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="font-display text-4xl text-anchor mb-1">
+      {{ auth.hasRole(['ADMIN']) ? 'Admin' : 'Teacher' }} Dashboard
+    </h1>
+    <p class="text-anchor/60">Manage your educational content</p>
+  </div>
+
+  <!-- Stats strip (ADMIN only) -->
+  @if (stats) {
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-2xl border border-anchor/8 shadow-sm px-5 py-4">
+        <p class="font-display text-3xl text-anchor">{{ stats.users.students }}</p>
+        <p class="text-xs font-semibold uppercase tracking-widest text-anchor/40 mt-1">Students</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-anchor/8 shadow-sm px-5 py-4">
+        <p class="font-display text-3xl text-secondary">{{ stats.users.teachers }}</p>
+        <p class="text-xs font-semibold uppercase tracking-widest text-anchor/40 mt-1">Teachers</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-anchor/8 shadow-sm px-5 py-4">
+        <p class="font-display text-3xl text-anchor">{{ stats.content.lessons }}</p>
+        <p class="text-xs font-semibold uppercase tracking-widest text-anchor/40 mt-1">Lessons</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-anchor/8 shadow-sm px-5 py-4">
+        <p class="font-display text-3xl text-primary">{{ stats.activity.quizAttempts }}</p>
+        <p class="text-xs font-semibold uppercase tracking-widest text-anchor/40 mt-1">Quiz Attempts</p>
+      </div>
+    </div>
+  }
+
+  <!-- Nav cards grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    @for (card of visibleCards; track card.route) {
+      <a [routerLink]="card.route"
+         class="bg-white rounded-[1.5rem] border border-anchor/8 shadow-sm p-6
+                hover:-translate-y-1.5 hover:shadow-[0_8px_32px_rgba(44,62,80,0.14)]
+                transition-all duration-200 cursor-pointer">
+        <div [ngClass]="card.color"
+             class="w-12 h-12 rounded-[1rem] flex items-center justify-center mb-4">
+          <span [ngClass]="card.iconColor" class="material-symbols-outlined text-2xl">{{ card.icon }}</span>
+        </div>
+        <h2 class="font-display text-2xl text-anchor">{{ card.label }}</h2>
+        @if (card.label === 'Subjects' && stats) {
+          <p class="text-sm text-anchor/50 mt-1">{{ stats.content.subjects }} subjects</p>
+        }
+        @if (card.label === 'Books' && stats) {
+          <p class="text-sm text-anchor/50 mt-1">{{ stats.content.books }} books</p>
+        }
+        @if (card.label === 'Lessons' && stats) {
+          <p class="text-sm text-anchor/50 mt-1">{{ stats.content.lessons }} lessons</p>
+        }
+        @if (card.label === 'Users' && stats) {
+          <p class="text-sm text-anchor/50 mt-1">{{ stats.users.total }} users</p>
+        }
+      </a>
+    }
+  </div>
+
+</div>

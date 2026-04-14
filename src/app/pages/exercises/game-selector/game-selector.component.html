@@ -1,0 +1,150 @@
+<div class="-m-8 min-h-screen pattern-bg flex flex-col">
+
+  <!-- ── Hero header ───────────────────────────────────────────────────────── -->
+  <div class="relative overflow-hidden flex-shrink-0"
+       style="background: linear-gradient(135deg, #2C3E50 0%, #1a252f 100%)">
+
+    <!-- Decorative blobs -->
+    <div class="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20 -translate-y-1/2 translate-x-1/4"
+         style="background: radial-gradient(circle, #FF6B35, transparent)"></div>
+    <div class="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-15 translate-y-1/2 -translate-x-1/4"
+         style="background: radial-gradient(circle, #9B59B6, transparent)"></div>
+
+    <!-- Content -->
+    <div class="relative z-10 px-8 pt-10 pb-6 text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold mb-4 tracking-wide"
+           style="background: rgba(255,217,61,0.2); color: #FFD93D">
+        🕹️ ARCADE MODE
+      </div>
+      <h1 class="font-display text-5xl text-white mb-2 leading-tight">Fun Math Time!</h1>
+      <p class="font-medium" style="color: rgba(255,255,255,0.55)">
+        Pick a game, set the difficulty, and beat your score!
+      </p>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="relative z-10 flex items-center justify-center gap-6 pb-7 px-8">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" style="color:#FFD93D">emoji_events</span>
+        <span class="text-sm font-bold text-white/80">
+          {{ stats ? stats.accuracy + '% accuracy' : '—' }}
+        </span>
+      </div>
+      <div class="w-1 h-1 rounded-full bg-white/20"></div>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" style="color:#FF6B35">local_fire_department</span>
+        <span class="text-sm font-bold text-white/80">
+          {{ stats ? stats.streak + ' streak' : '—' }}
+        </span>
+      </div>
+      <div class="w-1 h-1 rounded-full bg-white/20"></div>
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]" style="color:#4ECDC4">sports_esports</span>
+        <span class="text-sm font-bold text-white/80">
+          {{ stats ? stats.totalAttempts + ' played' : '—' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Body ──────────────────────────────────────────────────────────────── -->
+  <div class="flex-1 px-6 py-8 flex flex-col gap-8 max-w-2xl mx-auto w-full">
+
+    <!-- Section: Choose game -->
+    <div>
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-1 h-5 rounded-full" style="background:#FF6B35"></div>
+        <h2 class="font-display text-xl text-anchor">Choose Your Game</h2>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        @for (game of games; track game.type) {
+          <button (click)="selected = game.type"
+                  class="hover-card rounded-[1.5rem] p-5 text-left cursor-pointer relative overflow-hidden"
+                  [class.selected]="selected === game.type"
+                  [style.background]="selected === game.type ? game.bg : 'white'"
+                  [style.border]="'2px solid ' + (selected === game.type ? game.color : 'rgba(44,62,80,0.08)')"
+                  [style.box-shadow]="selected === game.type
+                    ? '0 0 0 3px ' + game.glow + ', 0 12px 30px -8px ' + game.glow
+                    : '0 2px 8px rgba(44,62,80,0.06)'">
+
+            <!-- Selected glow ring -->
+            @if (selected === game.type) {
+              <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center"
+                   [style.background]="game.color">
+                <span class="material-symbols-outlined text-white text-[12px]"
+                      style="font-variation-settings:'FILL' 1">check</span>
+              </div>
+            }
+
+            <!-- Operator badge -->
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 font-display text-3xl font-black"
+                 [style.background]="game.bg"
+                 [style.color]="game.color">
+              {{ game.operator }}
+            </div>
+
+            <h3 class="font-display text-lg text-anchor mb-0.5">{{ game.label }}</h3>
+            <p class="text-xs font-medium" style="color:rgba(44,62,80,0.5)">{{ game.desc }}</p>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Section: Difficulty -->
+    <div>
+      <div class="flex items-center gap-2 mb-4">
+        <div class="w-1 h-5 rounded-full" style="background:#9B59B6"></div>
+        <h2 class="font-display text-xl text-anchor">Choose Difficulty</h2>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        @for (d of difficulties; track d.id) {
+          <button (click)="difficulty = d.id"
+                  class="diff-btn rounded-[1.25rem] py-4 px-3 flex flex-col items-center gap-1 cursor-pointer"
+                  [class.selected]="difficulty === d.id"
+                  [style.background]="difficulty === d.id ? d.bg : 'white'"
+                  [style.border]="'2px solid ' + (difficulty === d.id ? d.color : 'rgba(44,62,80,0.08)')"
+                  [style.box-shadow]="difficulty === d.id
+                    ? '0 6px 20px -6px ' + d.color
+                    : '0 2px 8px rgba(44,62,80,0.05)'">
+            <span class="text-3xl">{{ d.emoji }}</span>
+            <span class="font-display text-base text-anchor">{{ d.label }}</span>
+            <span class="text-[11px] font-bold tracking-wide"
+                  [style.color]="d.color">{{ d.range }}</span>
+            <span class="text-[10px] text-anchor/40 text-center leading-tight">{{ d.desc }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Sticky play button ─────────────────────────────────────────────────── -->
+  <div class="sticky bottom-0 px-6 pb-8 pt-4 flex-shrink-0"
+       style="background: linear-gradient(to top, #FFFBF0 70%, transparent)">
+
+    <!-- Preview badge -->
+    <div class="flex items-center justify-center gap-3 mb-4">
+      <div class="flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm border border-anchor/8">
+        <span class="font-display text-2xl" [style.color]="selectedGame.color">
+          {{ selectedGame.operator }}
+        </span>
+        <span class="font-semibold text-sm text-anchor">{{ selectedGame.label }}</span>
+        <div class="w-px h-4 bg-anchor/15"></div>
+        <span class="text-sm font-semibold text-anchor/60 capitalize">{{ difficulty }}</span>
+      </div>
+    </div>
+
+    <a [routerLink]="['/exercises', selected]" [queryParams]="{ difficulty }"
+       class="flex items-center justify-center gap-3 w-full py-4 rounded-[1.5rem] font-display
+              text-xl text-white shadow-lg hover:opacity-90 active:scale-95 transition-all"
+       style="background: linear-gradient(135deg, #FF6B35, #e55a25);
+              box-shadow: 0 8px 30px -6px rgba(255,107,53,0.55)">
+      <span class="material-symbols-outlined text-[26px]"
+            style="font-variation-settings:'FILL' 1">sports_esports</span>
+      Let's Play! 🚀
+    </a>
+  </div>
+
+</div>
