@@ -8,9 +8,10 @@ import { UserRole } from '../../../core/models/user.model';
 
 const ROLES: UserRole[] = ['STUDENT', 'TEACHER', 'ADMIN'];
 const ROLE_META: Record<UserRole, { label: string; cls: string }> = {
-  STUDENT: { label: 'Student',  cls: 'bg-anchor/10 text-anchor/60' },
-  TEACHER: { label: 'Teacher',  cls: 'bg-secondary/15 text-secondary' },
-  ADMIN:   { label: 'Admin',    cls: 'bg-primary/15 text-primary' },
+  STUDENT:     { label: 'Student',     cls: 'bg-anchor/10 text-anchor/60' },
+  TEACHER:     { label: 'Teacher',     cls: 'bg-secondary/15 text-secondary' },
+  ADMIN:       { label: 'Admin',       cls: 'bg-primary/15 text-primary' },
+  SUPER_ADMIN: { label: 'Super Admin', cls: 'bg-purple-100 text-purple-600' },
 };
 
 @Component({

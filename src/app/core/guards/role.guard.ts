@@ -8,5 +8,6 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const roles: string[] = route.data['roles'] ?? [];
 
   if (auth.hasRole(roles)) return true;
-  return router.createUrlTree(['/subjects']);
+  const fallback = auth.hasRole(['SUPER_ADMIN']) ? '/organizations' : '/subjects';
+  return router.createUrlTree([fallback]);
 };

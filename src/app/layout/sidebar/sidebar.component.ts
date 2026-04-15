@@ -31,10 +31,15 @@ export class SidebarComponent {
   ];
 
   adminItems: NavItem[] = [
-    { label: 'nav.admin',       icon: 'admin_panel_settings', route: '/admin' },
+    { label: 'nav.admin', icon: 'admin_panel_settings', route: '/admin' },
   ];
 
-  get isAdmin(): boolean { return this.auth.hasRole(['ADMIN', 'TEACHER']); }
+  superAdminItems: NavItem[] = [
+    { label: 'Organizations', icon: 'domain', route: '/organizations' },
+  ];
+
+  get isAdmin(): boolean      { return this.auth.hasRole(['ADMIN', 'TEACHER']); }
+  get isSuperAdmin(): boolean { return this.auth.hasRole(['SUPER_ADMIN']); }
   get user() { return this.auth.currentUser; }
 
   logout() { this.auth.logout(); this.router.navigate(['/login']); }

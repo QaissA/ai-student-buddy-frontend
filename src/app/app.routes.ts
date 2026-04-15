@@ -88,6 +88,14 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/pronunciation/results/pronunciation-results.component').then(m => m.PronunciationResultsComponent),
       },
 
+      // Super Admin module
+      {
+        path: 'organizations',
+        canActivate: [roleGuard],
+        data: { roles: ['SUPER_ADMIN'] },
+        loadComponent: () => import('./pages/super-admin/organizations/organizations.component').then(m => m.OrganizationsComponent),
+      },
+
       // Admin module (ADMIN + TEACHER only)
       {
         path: 'admin',

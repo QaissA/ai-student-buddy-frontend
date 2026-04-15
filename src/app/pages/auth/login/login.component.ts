@@ -17,8 +17,9 @@ export class LoginComponent {
   private router = inject(Router);
 
   form = this.fb.group({
-    email:    ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
+    schoolSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    email:      ['', [Validators.required, Validators.email]],
+    password:   ['', Validators.required],
   });
 
   loading = false;
@@ -29,14 +30,18 @@ export class LoginComponent {
     if (this.form.invalid) return;
     this.loading = true;
     this.error = '';
-    const { email, password } = this.form.value;
-    this.authApi.login(email!, password!).subscribe({
+    const { schoolSlug, email, password } = this.form.value;
+    this.authApi.login(email!, password!, schoolSlug!).subscribe({
       next: ({ user, token }) => {
         this.authService.setAuth(user, token);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([user.role === 'SUPER_ADMIN' ? '/organizations' : '/dashboard']);
       },
-      error: () => {
-        this.error = 'Invalid email or password.';
+      error: (err) => {
+        if (err.status === 404) {
+          this.error = 'School not found. Check your school code.';
+        } else {
+          this.error = 'Invalid email or password.';
+        }
         this.loading = false;
       },
     });

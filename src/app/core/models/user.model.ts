@@ -1,4 +1,4 @@
-export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN';
+export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN' | 'SUPER_ADMIN';
 
 export interface User {
   id: string;
@@ -6,6 +6,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  organizationId: string | null;
 }
 
 export interface AuthResponse {

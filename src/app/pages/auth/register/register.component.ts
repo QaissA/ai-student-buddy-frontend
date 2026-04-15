@@ -17,10 +17,11 @@ export class RegisterComponent {
   private router = inject(Router);
 
   form = this.fb.group({
-    firstName: ['', Validators.required],
-    lastName:  ['', Validators.required],
-    email:     ['', [Validators.required, Validators.email]],
-    password:  ['', [Validators.required, Validators.minLength(6)]],
+    schoolSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    firstName:  ['', Validators.required],
+    lastName:   ['', Validators.required],
+    email:      ['', [Validators.required, Validators.email]],
+    password:   ['', [Validators.required, Validators.minLength(6)]],
   });
 
   loading = false;
@@ -31,14 +32,20 @@ export class RegisterComponent {
     if (this.form.invalid) return;
     this.loading = true;
     this.error = '';
-    const { firstName, lastName, email, password } = this.form.value;
-    this.authApi.register(firstName!, lastName!, email!, password!).subscribe({
+    const { schoolSlug, firstName, lastName, email, password } = this.form.value;
+    this.authApi.register(firstName!, lastName!, email!, password!, schoolSlug!).subscribe({
       next: ({ user, token }) => {
         this.authService.setAuth(user, token);
         this.router.navigate(['/subjects']);
       },
-      error: () => {
-        this.error = 'Registration failed. Please try again.';
+      error: (err) => {
+        if (err.status === 404) {
+          this.error = 'School not found. Check your school code.';
+        } else if (err.status === 409) {
+          this.error = 'This email is already registered at your school.';
+        } else {
+          this.error = 'Registration failed. Please try again.';
+        }
         this.loading = false;
       },
     });

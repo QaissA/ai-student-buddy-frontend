@@ -9,12 +9,12 @@ export class AuthApi {
   private http = inject(HttpClient);
   private base = environment.apiUrl;
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.base}/auth/login`, { email, password });
+  login(email: string, password: string, schoolSlug: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.base}/auth/login`, { email, password, schoolSlug });
   }
 
-  register(firstName: string, lastName: string, email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.base}/auth/register`, { firstName, lastName, email, password });
+  register(firstName: string, lastName: string, email: string, password: string, schoolSlug: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.base}/auth/register`, { firstName, lastName, email, password, schoolSlug });
   }
 
   registerTeacher(body: { firstName: string; lastName: string; email: string; password: string }): Observable<{ user: any }> {

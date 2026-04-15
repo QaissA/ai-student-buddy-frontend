@@ -24,6 +24,16 @@
 
         <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
 
+          <!-- School Code -->
+          <div>
+            <div class="relative">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-anchor/40 text-[20px]">domain</span>
+              <input formControlName="schoolSlug" type="text" placeholder="School code (e.g. my-school)"
+                     class="input-field pl-12" autocomplete="organization" />
+            </div>
+            <p class="text-xs text-anchor/50 mt-1 ml-1">Ask your school administrator for the school code.</p>
+          </div>
+
           <div class="grid grid-cols-2 gap-4">
             <div class="relative">
               <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-anchor/40 text-[20px]">person</span>
