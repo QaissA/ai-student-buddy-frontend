@@ -17,7 +17,7 @@ export class LoginComponent {
   private router = inject(Router);
 
   form = this.fb.group({
-    schoolSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)]],
+    schoolSlug: ['', [Validators.pattern(/^[a-z0-9-]+$/)]],
     email:      ['', [Validators.required, Validators.email]],
     password:   ['', Validators.required],
   });
@@ -31,7 +31,10 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
     const { schoolSlug, email, password } = this.form.value;
-    this.authApi.login(email!, password!, schoolSlug!).subscribe({
+    const request$ = schoolSlug
+      ? this.authApi.login(email!, password!, schoolSlug)
+      : this.authApi.superAdminLogin(email!, password!);
+    request$.subscribe({
       next: ({ user, token }) => {
         this.authService.setAuth(user, token);
         this.router.navigate([user.role === 'SUPER_ADMIN' ? '/organizations' : '/dashboard']);

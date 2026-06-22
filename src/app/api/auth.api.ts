@@ -13,6 +13,10 @@ export class AuthApi {
     return this.http.post<AuthResponse>(`${this.base}/auth/login`, { email, password, schoolSlug });
   }
 
+  superAdminLogin(email: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.base}/auth/super-admin-login`, { email, password });
+  }
+
   register(firstName: string, lastName: string, email: string, password: string, schoolSlug: string): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.base}/auth/register`, { firstName, lastName, email, password, schoolSlug });
   }

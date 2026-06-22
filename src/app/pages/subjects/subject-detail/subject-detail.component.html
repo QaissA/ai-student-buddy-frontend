@@ -80,4 +80,33 @@
     </div>
   }
 
+  <!-- ── Subject documents (uploaded by your school) ── -->
+  @if (documents.length) {
+    <div class="mt-10">
+      <h2 class="font-display text-2xl text-anchor mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">description</span>
+        Documents
+      </h2>
+      <div class="bg-white rounded-[1.5rem] border border-anchor/8 shadow-sm divide-y divide-anchor/10">
+        @for (doc of documents; track doc.id) {
+          <button (click)="openDocument(doc)"
+                  class="w-full flex items-center gap-4 px-6 py-4 text-left hover:bg-anchor/2 transition-colors first:rounded-t-[1.5rem] last:rounded-b-[1.5rem]">
+            <span class="material-symbols-outlined text-anchor/40">
+              {{ doc.mimeType === 'application/pdf' ? 'picture_as_pdf' : 'image' }}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-semibold text-anchor truncate">{{ doc.title || doc.originalName }}</span>
+              <span class="block text-xs text-anchor/50 mt-0.5">
+                <span class="font-medium">{{ doc.category }}</span>
+                @if (doc.bookName) { · {{ doc.bookName }} }
+                · {{ doc.createdAt | date:'mediumDate' }}
+              </span>
+            </span>
+            <span class="material-symbols-outlined text-primary text-[20px]">open_in_new</span>
+          </button>
+        }
+      </div>
+    </div>
+  }
+
 </div>
