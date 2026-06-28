@@ -47,6 +47,8 @@ export interface UploadDocumentFields {
 export interface DocChatTurn {
   role: 'user' | 'assistant';
   content: string;
+  /** Natural-voice TTS clip for an assistant turn (served by documents-service). */
+  audioUrl?: string;
 }
 
 export interface GeneratedExercise {
@@ -112,11 +114,13 @@ export class DocumentsApi {
     message: string,
     history: DocChatTurn[] = [],
     image?: string,
-  ): Observable<{ reply: string }> {
-    return this.http.post<{ reply: string }>(`${this.base}/${id}/chat`, {
+    language?: string,
+  ): Observable<{ reply: string; audioUrl?: string }> {
+    return this.http.post<{ reply: string; audioUrl?: string }>(`${this.base}/${id}/chat`, {
       message,
       history,
       ...(image ? { image } : {}),
+      ...(language ? { language } : {}),
     });
   }
 

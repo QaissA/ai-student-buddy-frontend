@@ -74,7 +74,7 @@
                   {{ m.content }}
                 </div>
                 @if (m.role === 'assistant') {
-                  <button (click)="replay(m.content)" class="mt-1 ml-1 text-xs text-ai-purple font-semibold inline-flex items-center gap-1">
+                  <button (click)="replay(m)" class="mt-1 ml-1 text-xs text-ai-purple font-semibold inline-flex items-center gap-1">
                     <span class="material-symbols-outlined text-[14px]">volume_up</span> Replay
                   </button>
                 }

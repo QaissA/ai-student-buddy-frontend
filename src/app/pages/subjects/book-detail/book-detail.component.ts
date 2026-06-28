@@ -9,6 +9,7 @@ import {
   DocumentsApi, SubjectDocument, DocChatTurn, GeneratedExercise,
 } from '../../../api/documents.api';
 import { TtsService } from '../../../core/services/tts.service';
+import { environment } from '../../../../environments/environment';
 
 const TTS_LANG: Record<string, string> = {
   ARABIC: 'ar-SA', FRENCH: 'fr-FR', ENGLISH: 'en-US', SPANISH: 'es-ES', OTHER: 'en-US',
@@ -33,10 +34,16 @@ export class BookDetailComponent implements OnInit, OnDestroy {
   private tts  = inject(TtsService);
   private route = inject(ActivatedRoute);
 
+  // Origin of the documents-service, used to resolve read-aloud TTS clips
+  // (e.g. http://localhost:3100 + /uploads/audio/x.mp3). Same scheme as the AI Tutor.
+  private mediaBase = (environment.documentsApiUrl || environment.apiUrl).replace('/api/v1', '');
+  private currentAudio: HTMLAudioElement | null = null;
+
   book: Book | null = null;
   pdfDocs: SubjectDocument[] = [];   // the "course" = the book's PDFs
   loading = true;
   ttsLang = 'en-US';
+  subjectLanguage?: string;          // ARABIC | FRENCH | ENGLISH | SPANISH | OTHER — sets the AI's reply language
   panel: 'ask' | 'exercises' = 'ask';
 
   // Collapsible panes (collapsing one expands the other; never both collapsed).
@@ -75,7 +82,10 @@ export class BookDetailComponent implements OnInit, OnDestroy {
       this.book = b;
       if (b?.subjectId) {
         this.api.getSubject(b.subjectId).subscribe({
-          next: s => this.ttsLang = TTS_LANG[s.language] ?? 'en-US',
+          next: s => {
+            this.subjectLanguage = s.language;
+            this.ttsLang = TTS_LANG[s.language] ?? 'en-US';
+          },
           error: () => {},
         });
       }
@@ -90,7 +100,7 @@ export class BookDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() { this.stopListening(); this.tts.stop(); }
+  ngOnDestroy() { this.stopListening(); this.tts.stop(); this.stopAudio(); }
 
   // ── PDF state (paginates across ALL the book's PDFs) ────────────────────────
   currentDocIndex = 0;
@@ -165,6 +175,7 @@ export class BookDetailComponent implements OnInit, OnDestroy {
     const Ctor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!Ctor) { this.chatError = 'Voice input is not supported in this browser — use the text box.'; return; }
     this.tts.stop();
+    this.stopAudio();
     this.recognition = new Ctor();
     this.recognition.lang = this.ttsLang;
     this.recognition.interimResults = false;
@@ -212,11 +223,11 @@ export class BookDetailComponent implements OnInit, OnDestroy {
     this.pendingImage = null;
     this.chatLoading = true;
 
-    this.documentsApi.chat(doc.id, text, history, image).subscribe({
-      next: ({ reply }) => {
-        this.chatMessages.push({ role: 'assistant', content: reply });
+    this.documentsApi.chat(doc.id, text, history, image, this.subjectLanguage).subscribe({
+      next: ({ reply, audioUrl }) => {
+        this.chatMessages.push({ role: 'assistant', content: reply, audioUrl });
         this.chatLoading = false;
-        this.tts.speak(reply, this.ttsLang);
+        this.readAloud(reply, audioUrl);
       },
       error: (e) => {
         this.chatLoading = false;
@@ -225,7 +236,32 @@ export class BookDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  replay(text: string) { this.tts.speak(text, this.ttsLang); }
+  replay(turn: DocChatTurn) { this.readAloud(turn.content, turn.audioUrl); }
+
+  /**
+   * Read a reply aloud with the natural OpenAI voice (mp3 from documents-service).
+   * Falls back to the browser's speechSynthesis voice if there's no audio clip
+   * (e.g. TTS failed server-side) so the chat still talks.
+   */
+  private readAloud(text: string, audioUrl?: string) {
+    this.tts.stop();
+    this.stopAudio();
+    if (audioUrl) {
+      const audio = new Audio(this.mediaBase + audioUrl);
+      this.currentAudio = audio;
+      // If the clip can't be played, fall back to the browser voice.
+      audio.play().catch(() => this.tts.speak(text, this.ttsLang));
+    } else {
+      this.tts.speak(text, this.ttsLang);
+    }
+  }
+
+  private stopAudio() {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+    }
+  }
 
   // ── Exercises ───────────────────────────────────────────────────────────────
   exercises: GeneratedExercise[] = [];
